@@ -21,7 +21,10 @@ client.connect()
   .then(() => {
     console.log('Connected to MongoDB');
 
+
     const db = client.db('COP4331'); // Ensure this matches your database name exactly
+
+
 
     // Route: /api/register
     app.post('/api/register', async (req, res) => {
