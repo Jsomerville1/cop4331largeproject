@@ -1,20 +1,19 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const { error } = require('console');
-
-
-
 require('dotenv').config();
-
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/?retryWrites=true&w=majority';
-const MongoClient = require('mongodb').MongoClient;
+// Import ObjectId from MongoDB
+const { MongoClient, ObjectId } = require('mongodb');
+
+// MongoDB connection string with database name included
+const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Connect to MongoDB and start the server
@@ -22,22 +21,79 @@ client.connect()
   .then(() => {
     console.log('Connected to MongoDB');
 
-    const db = client.db('COP4331Cards'); // Replace with your database name
+    const db = client.db('COP4331'); // Ensure this matches your database name exactly
 
-    // Define API routes using relative paths
+    // Route: /api/register
+    app.post('/api/register', async (req, res) => {
+      const { firstName, lastName, username, email, password } = req.body;
+
+      // Validate required fields
+      if (!firstName || !lastName || !username || !email || !password) {
+        return res.status(400).json({ error: 'All fields must be entered.' });
+      }
+
+      try {
+        // Check if the user already exists
+        const existingUser = await db.collection('Users').findOne({ Username: username });
+        if (existingUser) {
+          return res.status(400).json({ error: 'User already exists.' });
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert the new user
+        const result = await db.collection('Users').insertOne({
+          Username: username,
+          Password: hashedPassword,
+          FirstName: firstName,
+          LastName: lastName,
+          Email: email,
+        });
+
+        // The new user's _id (ObjectId)
+        const newUserId = result.insertedId;
+
+        res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
+      } catch (e) {
+        res.status(500).json({ error: e.message });
+      }
+    });
+
+    // Route: /api/login
+    app.post('/api/login', async (req, res) => {
+      const { username, password } = req.body;
+
+      try {
+        const user = await db.collection('Users').findOne({ Username: username });
+
+        if (user && await bcrypt.compare(password, user.Password)) {
+          res.status(200).json({
+            id: user._id, // Use the _id field (ObjectId)
+            firstName: user.FirstName,
+            lastName: user.LastName,
+            error: '',
+          });
+        } else {
+          res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
+        }
+      } catch (e) {
+        res.status(500).json({ error: e.toString() });
+      }
+    });
 
     // Route: /api/addcard
     app.post('/api/addcard', async (req, res) => {
-      // Incoming: userId, card
-      // Outgoing: error
-
       const { userId, card } = req.body;
 
-      const newCard = { Card: card, UserId: userId };
+      // Convert userId to ObjectId
+      const userObjectId = new ObjectId(userId);
+
+      const newCard = { Card: card, UserId: userObjectId };
       let error = '';
 
       try {
-        const result = await db.collection('Cards').insertOne(newCard);
+        await db.collection('Cards').insertOne(newCard);
         res.status(200).json({ error: '' });
       } catch (e) {
         error = e.toString();
@@ -45,88 +101,26 @@ client.connect()
       }
     });
 
-    // Route: /api/login
-    app.post('/api/login', async (req, res) => {
-      // Incoming: login, password
-      // Outgoing: id, firstName, lastName, error
-
-      let error = '';
-
-      const { login, password } = req.body;
-
-      try {
-        const results = await db.collection('Users').findOne({ login: login, password: password });
-
-        if (results) {
-          const id = results.UserID;
-          const fn = results.FirstName;
-          const ln = results.LastName;
-          res.status(200).json({ id: id, firstName: fn, lastName: ln, error: '' });
-        } else {
-          res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
-        }
-      } catch (e) {
-        error = e.toString();
-        res.status(500).json({ error: error });
-      }
-    });
-
-  
-    api.post('/api/register', async (req, res) => {
-      const { name, login, email, password } = req.body;
-    
-      // Validate required fields
-      if (!name || !login || !email || !password) {
-        return res.status(400).json({ error: 'All fields must be entered.' });
-      }
-    
-      try {
-        // Check if the user already exists
-        const existingUser = await db.collection('Users').findOne({ login });
-        if (existingUser) {
-          return res.status(400).json({ error: 'User already exists.' });
-        }
-    
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-    
-        // Insert the new user
-        await db.collection('Users').insertOne({
-          Name: name,
-          login,
-          Email: email,
-          password: hashedPassword,
-        });
-    
-        res.status(201).json({ message: 'User registered successfully.' });
-      } catch (e) {
-        res.status(500).json({ error: e.message });
-      }
-    });
-    
-
-
-
     // Route: /api/searchcards
     app.post('/api/searchcards', async (req, res) => {
-      // Incoming: userId, search
-      // Outgoing: results[], error
-
-      let error = '';
-
       const { userId, search } = req.body;
+
+      // Convert userId to ObjectId
+      const userObjectId = new ObjectId(userId);
 
       const _search = search.trim();
 
       try {
-        const results = await db.collection('Cards').find({ "Card": { $regex: '^' + _search, $options: 'i' } }).toArray();
+        const results = await db.collection('Cards').find({
+          UserId: userObjectId,
+          Card: { $regex: '^' + _search, $options: 'i' },
+        }).toArray();
 
         const _ret = results.map(result => result.Card);
 
         res.status(200).json({ results: _ret, error: '' });
       } catch (e) {
-        error = e.toString();
-        res.status(500).json({ results: [], error: error });
+        res.status(500).json({ results: [], error: e.toString() });
       }
     });
 
@@ -137,5 +131,5 @@ client.connect()
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1); // Exit the application if unable to connect to MongoDB
+    process.exit(1);
   });
