@@ -24,4 +24,5 @@ tsconfig.node.json
 vite.config.ts
 package-lock.json
 package.json
+eslint.config.js
 
