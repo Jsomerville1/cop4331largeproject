@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const url = 'mongodb+srv://cop4331:omgpeach@cop4331.584tt.mongodb.net/COP4331Cards?retryWrites=true&w=majority';
+const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/?retryWrites=true&w=majority';
 const MongoClient = require('mongodb').MongoClient;
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
