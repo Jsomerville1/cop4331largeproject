@@ -22,7 +22,7 @@ client.connect()
   .then(() => {
     console.log('Connected to MongoDB');
 
-    const db = client.db('COP4331Cards'); // Replace with your database name
+    const db = client.db('COP4331'); // Replace with your database name
 
     // Define API routes using relative paths
 
