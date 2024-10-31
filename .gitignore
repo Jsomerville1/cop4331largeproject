@@ -2,6 +2,7 @@ node_modules/
 bundle.js
 npm-debug.log
 
+
 /.idea
 /public
 
@@ -12,3 +13,15 @@ npm-debug.log
 build/
 dist/
 client/.parcel-cache
+
+package.json
+vite.svg
+
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+
+vite.config.ts
+package-lock.json
+package.json
+
