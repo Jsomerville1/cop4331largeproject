@@ -2,9 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
 //const bcrypt = require('bcryptjs');
-
 require('dotenv').config();
 
 const app = express();
@@ -28,41 +26,37 @@ client.connect()
 
 
 
-    // Route: /api/register
-    app.post('/api/register', async (req, res) => {
-      const { firstName, lastName, username, email, password } = req.body;
+// Route: /api/register
+app.post('/api/register', async (req, res) => {
+  const { FirstName, LastName, Username, Email, Password } = req.body;
 
-      // Validate required fields
-      if (!firstName || !lastName || !username || !email || !password) {
-        return res.status(400).json({ error: 'All fields must be entered.' });
-      }
+  // Validate required fields
+  if (!FirstName || !LastName || !Username || !Email || !Password) {
+    return res.status(400).json({ error: 'All fields must be entered.' });
+  }
 
-      try {
-        // Check if the user already exists
-        const existingUser = await db.collection('Users').findOne({ Username: username });
-        if (existingUser) {
-          return res.status(400).json({ error: 'User already exists.' });
-        }
+  try {
+    // Check if the user already exists
+    const existingUser = await db.collection('Users').findOne({ Username: Username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists.' });
+    }
 
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
+    // Generate a new UserId by incrementing the highest existing UserId
+    let newUserId = 1; // Default to 1 if no users exist
+    const lastUser = await db.collection('Users').find().sort({ UserId: -1 }).limit(1).toArray();
+    if (lastUser.length > 0) {
+      newUserId = lastUser[0].UserId + 1;
+    }
 
-        // Insert the new user
-        const result = await db.collection('Users').insertOne({
-          Username: username,
-          Password: hashedPassword,
-          FirstName: firstName,
-          LastName: lastName,
-          Email: email,
-        });
-
-        // The new user's _id (ObjectId)
-        const newUserId = result.insertedId;
-
-        res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
-      } catch (e) {
-        res.status(500).json({ error: e.message });
-      }
+    // Insert the new user
+    await db.collection('Users').insertOne({
+      UserId: newUserId,
+      Username: Username,
+      Password: Password,
+      FirstName: FirstName,
+      LastName: LastName,
+      Email: Email,
     });
 
     res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
@@ -73,25 +67,32 @@ client.connect()
 
     // Route: /api/login
     app.post('/api/login', async (req, res) => {
-      const { username, password } = req.body;
+      // Incoming: Username, Password
+      // Outgoing: UserId, FirstName, LastName, error
+
+      let error = '';
+
+      const { Username, Password } = req.body;
 
       try {
-        const user = await db.collection('Users').findOne({ Username: username });
+        const result = await db.collection('Users').findOne({ Username: Username, Password: Password });
 
-        if (user && await bcrypt.compare(password, user.Password)) {
-          res.status(200).json({
-            id: user._id, // Use the _id field (ObjectId)
-            firstName: user.FirstName,
-            lastName: user.LastName,
-            error: '',
-          });
+        if (result) {
+          const id = result.UserId;
+          const fn = result.FirstName;
+          const ln = result.LastName;
+          res.status(200).json({ id: id, firstName: fn, lastName: ln, error: '' });
         } else {
           res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
         }
       } catch (e) {
-        res.status(500).json({ error: e.toString() });
+        error = e.toString();
+        res.status(500).json({ error: error });
       }
     });
+
+
+
 
     // Route: /api/addcard
     app.post('/api/addcard', async (req, res) => {
