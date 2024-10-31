@@ -17,6 +17,10 @@ npm create vite@latest -> select react -> select typescript
 
 Now, clone the repo to a separate folder
 
+open a terminal in your frontend folder
+
+run npm install
+
 copy paste the entire contents of the repo folder into the original folder you made and replace existing files(where you ran the commands)
 
 remove the cloned repo from github desktop
