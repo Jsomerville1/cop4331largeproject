@@ -2,7 +2,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+
 //const bcrypt = require('bcryptjs');
+
 require('dotenv').config();
 
 const app = express();
@@ -22,41 +24,45 @@ client.connect()
     console.log('Connected to MongoDB');
 
 
-    const db = client.db('COP4331'); 
+    const db = client.db('COP4331'); // Ensure this matches your database name exactly
 
 
 
-// Route: /api/register
-app.post('/api/register', async (req, res) => {
-  const { FirstName, LastName, Username, Email, Password } = req.body;
+    // Route: /api/register
+    app.post('/api/register', async (req, res) => {
+      const { firstName, lastName, username, email, password } = req.body;
 
-  // Validate required fields
-  if (!FirstName || !LastName || !Username || !Email || !Password) {
-    return res.status(400).json({ error: 'All fields must be entered.' });
-  }
+      // Validate required fields
+      if (!firstName || !lastName || !username || !email || !password) {
+        return res.status(400).json({ error: 'All fields must be entered.' });
+      }
 
-  try {
-    // Check if the user already exists
-    const existingUser = await db.collection('Users').findOne({ Username: Username });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists.' });
-    }
+      try {
+        // Check if the user already exists
+        const existingUser = await db.collection('Users').findOne({ Username: username });
+        if (existingUser) {
+          return res.status(400).json({ error: 'User already exists.' });
+        }
 
-    // Generate a new UserId by incrementing the highest existing UserId
-    let newUserId = 1; // Default to 1 if no users exist
-    const lastUser = await db.collection('Users').find().sort({ UserId: -1 }).limit(1).toArray();
-    if (lastUser.length > 0) {
-      newUserId = lastUser[0].UserId + 1;
-    }
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert the new user
-    await db.collection('Users').insertOne({
-      UserId: newUserId,
-      Username: Username,
-      Password: Password,
-      FirstName: FirstName,
-      LastName: LastName,
-      Email: Email,
+        // Insert the new user
+        const result = await db.collection('Users').insertOne({
+          Username: username,
+          Password: hashedPassword,
+          FirstName: firstName,
+          LastName: lastName,
+          Email: email,
+        });
+
+        // The new user's _id (ObjectId)
+        const newUserId = result.insertedId;
+
+        res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
+      } catch (e) {
+        res.status(500).json({ error: e.message });
+      }
     });
 
     res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
@@ -67,32 +73,25 @@ app.post('/api/register', async (req, res) => {
 
     // Route: /api/login
     app.post('/api/login', async (req, res) => {
-      // Incoming: Username, Password
-      // Outgoing: UserId, FirstName, LastName, error
-
-      let error = '';
-
-      const { Username, Password } = req.body;
+      const { username, password } = req.body;
 
       try {
-        const result = await db.collection('Users').findOne({ Username: Username, Password: Password });
+        const user = await db.collection('Users').findOne({ Username: username });
 
-        if (result) {
-          const id = result.UserId;
-          const fn = result.FirstName;
-          const ln = result.LastName;
-          res.status(200).json({ id: id, firstName: fn, lastName: ln, error: '' });
+        if (user && await bcrypt.compare(password, user.Password)) {
+          res.status(200).json({
+            id: user._id, // Use the _id field (ObjectId)
+            firstName: user.FirstName,
+            lastName: user.LastName,
+            error: '',
+          });
         } else {
           res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
         }
       } catch (e) {
-        error = e.toString();
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: e.toString() });
       }
     });
-
-
-
 
     // Route: /api/addcard
     app.post('/api/addcard', async (req, res) => {

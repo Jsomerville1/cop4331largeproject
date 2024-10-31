@@ -1,6 +1,7 @@
 To clone the repo follow these steps if using Windows:
 
 create a folder to store the project
+
 open a terminal in that folder
 
 run the following commands from that folder:
