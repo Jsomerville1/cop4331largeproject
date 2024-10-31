@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const { error } = require('console');
 
 
 
@@ -68,6 +70,42 @@ client.connect()
         res.status(500).json({ error: error });
       }
     });
+
+  
+    api.post('/api/register', async (req, res) => {
+      const { name, login, email, password } = req.body;
+    
+      // Validate required fields
+      if (!name || !login || !email || !password) {
+        return res.status(400).json({ error: 'All fields must be entered.' });
+      }
+    
+      try {
+        // Check if the user already exists
+        const existingUser = await db.collection('Users').findOne({ login });
+        if (existingUser) {
+          return res.status(400).json({ error: 'User already exists.' });
+        }
+    
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+    
+        // Insert the new user
+        await db.collection('Users').insertOne({
+          Name: name,
+          login,
+          Email: email,
+          password: hashedPassword,
+        });
+    
+        res.status(201).json({ message: 'User registered successfully.' });
+      } catch (e) {
+        res.status(500).json({ error: e.message });
+      }
+    });
+    
+
+
 
     // Route: /api/searchcards
     app.post('/api/searchcards', async (req, res) => {
