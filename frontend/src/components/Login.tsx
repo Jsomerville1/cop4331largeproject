@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import gravestoneImage from '../assets/Gravestone.png';
 
 function Login()
 {
@@ -60,18 +61,54 @@ function Login()
       setPassword( e.target.value );
     }
 
-    return(
-      <div id="loginDiv">
-        <span id="inner-title">PLEASE LOG IN</span><br />
-        Login: <input type="text" id="loginName" placeholder="Username" 
-          onChange={handleSetLoginName} /><br />
-        Password: <input type="password" id="loginPassword" placeholder="Password" 
-          onChange={handleSetPassword} />
-        <input type="submit" id="loginButton" className="buttons" value = "Do It"
-          onClick={doLogin} />
-        <span id="loginResult">{message}</span>
-     </div>
-    );
+    return (
+      <div 
+          id="loginDiv"
+          style={{
+              backgroundImage: `url(${gravestoneImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100vh',
+              width: '100%',
+              backgroundColor: '#242424'
+          }}
+      >
+          <div className="login-container" style={{ padding: '0 10px' }}>
+              <h2 className="login-title">Login to Afterwords</h2>
+  
+              <input
+                  type="text"
+                  id="loginName"
+                  placeholder="Username"
+                  onChange={handleSetLoginName}
+                  className="login-input"
+              />
+  
+              <input
+                  type="password"
+                  id="loginPassword"
+                  placeholder="Password"
+                  onChange={handleSetPassword}
+                  className="login-input"
+              />
+  
+              <button
+                  onClick={doLogin}
+                  className="login-button"
+              >
+                  Log In
+              </button>
+  
+              <div className={`login-message ${message === 'Login successful!' ? 'success' : ''}`}>
+                  {message}
+              </div>
+          </div>
+      </div>
+  );
 };
 
 export default Login;
