@@ -35,6 +35,10 @@ h1 {
   line-height: 1.1;
 }
 
+#subtitle {
+  font-size: 1.2em;
+}
+
 #invis-text {
   color: transparent;
   font-size: 32px;
@@ -50,19 +54,19 @@ h1 {
   height: 100vh;
   width: 100%;
   background-image: url(${gravestoneImage});
-  background-size: contain;
-  background-position: center;
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
   background-color: #8a8a8a;
 }
 
 .login-container {
   background-color: #e0e0e050;
-  padding: 20px 30px;
+  padding: 40px 30px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   max-width: 350px;
-  width: 100%;
+  width: 80%;
   text-align: center;
 }
 
@@ -73,13 +77,18 @@ h1 {
 }
 
 .login-input {
-  width: 100%;
+  width: 75%;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #cccccca8;
   border-radius: 5px;
   font-size: 1em;
   box-sizing: border-box;
+}
+
+.login-input::placeholder {
+  color: #e0e0e0;
+  opacity: 0.7;
 }
 
 .login-button {
@@ -99,9 +108,12 @@ h1 {
 }
 
 .login-message {
-  margin-top: 15px;
-  font-size: 0.9em;
-  color: red; /* Default to error color */
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  font-weight: bolder;
+  color: rgb(255, 84, 84); /* Default to error color */
+  text-shadow: 0 0 5px rgb(0, 0, 0), 0 0 10px rgb(0, 0, 0); /* Creates an outline effect */
 }
 
 .login-message.success {
