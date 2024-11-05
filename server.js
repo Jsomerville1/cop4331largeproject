@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 // Import ObjectId from MongoDB
 const { MongoClient, ObjectId } = require('mongodb');
 
+
 // MongoDB connection string with database name included
 const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -31,6 +32,7 @@ app.post('/api/register', async (req, res) => {
 
   // Validate required fields
   if (!FirstName || !LastName || !Username || !Email || !Password) {
+
     return res.status(400).json({ error: 'All fields must be entered.' });
   }
 
@@ -56,6 +58,9 @@ app.post('/api/register', async (req, res) => {
       FirstName: FirstName,
       LastName: LastName,
       Email: Email,
+
+      CheckInFreq: CheckInFreq
+
     });
 
     res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
@@ -143,4 +148,57 @@ app.post('/api/register', async (req, res) => {
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1);
+
   });
+
+//displying recipients and messages
+  app.post('/api/recipients/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const recipients = await db.collection('Recipients').find({ userId }).toArray();
+      res.status(200).json({ recipients });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  //to see the frequency of how many time to check in
+  app.post('/api/users/:userId/checkin-frequency', async (req, res) => {
+    const { userId } = req.params;
+    const { frequency } = req.body;
+  
+    try {
+      await db.collection('Users').updateOne({ _id: userId }, { $set: { checkInFrequency: frequency } });
+      res.status(200).json({ message: 'Check-in frequency updated successfully.' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+
+  //deletes the user
+  app.delete('/api/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      // Delete user's messages first if necessary
+      await db.collection('Messages').deleteMany({ $or: [{ senderId: userId }, { recipientId: userId }] });
+  
+      // Delete user account
+      const result = await db.collection('Users').deleteOne({ _id: userId });
+  
+      if (result.deletedCount === 1) {
+        res.status(200).json({ message: 'User account and associated data deleted successfully.' });
+      } else {
+        res.status(404).json({ error: 'User not found.' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error deleting user: ' + error.message });
+    }
+  });
+  
+  
+
+
+
