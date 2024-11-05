@@ -1,190 +1,197 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+//const bcrypt = require('bcryptjs');
+require('dotenv').config();
+
 const app = express();
-const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb+srv://cop4331:omgpeach@cop4331.584tt.mongodb.net/?retryWrites=true&w=majority&appName=cop4331';
-//const url = 'mongodb+srv://RickLeinecker:COP4331Rocks@cluster0-4pisv.mongodb.net/COP4331?retryWrites=true&w=majority';
-const client = new MongoClient(url);
-client.connect();
-const corsOptions = {
-    origin: 'copteam22.xyz', // Add the correct origin (your frontend app URL)
-    methods: 'GET, POST, PATCH, DELETE, OPTIONS',
-    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-};
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json());
-var cardList =
-    [
-        'Roy Campanella',
-        'Paul Molitor',
-        'Tony Gwynn',
-        'Dennis Eckersley',
-        'Reggie Jackson',
-        'Gaylord Perry',
-        'Buck Leonard',
-        'Rollie Fingers',
-        'Charlie Gehringer',
-        'Wade Boggs',
-        'Carl Hubbell',
-        'Dave Winfield',
-        'Jackie Robinson',
-        'Ken Griffey, Jr.',
-        'Al Simmons',
-        'Chuck Klein',
-        'Mel Ott',
-        'Mark McGwire',
-        'Nolan Ryan',
-        'Ralph Kiner',
-        'Yogi Berra',
-        'Goose Goslin',
-        'Greg Maddux',
-        'Frankie Frisch',
-        'Ernie Banks',
-        'Ozzie Smith',
-        'Hank Greenberg',
-        'Kirby Puckett',
-        'Bob Feller',
-        'Dizzy Dean',
-        'Joe Jackson',
-        'Sam Crawford',
-        'Barry Bonds',
-        'Duke Snider',
-        'George Sisler',
-        'Ed Walsh',
-        'Tom Seaver',
-        'Willie Stargell',
-        'Bob Gibson',
-        'Brooks Robinson',
-        'Steve Carlton',
-        'Joe Medwick',
-        'Nap Lajoie',
-        'Cal Ripken, Jr.',
-        'Mike Schmidt',
-        'Eddie Murray',
-        'Tris Speaker',
-        'Al Kaline',
-        'Sandy Koufax',
-        'Willie Keeler',
-        'Pete Rose',
-        'Robin Roberts',
-        'Eddie Collins',
-        'Lefty Gomez',
-        'Lefty Grove',
-        'Carl Yastrzemski',
-        'Frank Robinson',
-        'Juan Marichal',
-        'Warren Spahn',
-        'Pie Traynor',
-        'Roberto Clemente',
-        'Harmon Killebrew',
-        'Satchel Paige',
-        'Eddie Plank',
-        'Josh Gibson',
-        'Oscar Charleston',
-        'Mickey Mantle',
-        'Cool Papa Bell',
-        'Johnny Bench',
-        'Mickey Cochrane',
-        'Jimmie Foxx',
-        'Jim Palmer',
-        'Cy Young',
-        'Eddie Mathews',
-        'Honus Wagner',
-        'Paul Waner',
-        'Grover Alexander',
-        'Rod Carew',
-        'Joe DiMaggio',
-        'Joe Morgan',
-        'Stan Musial',
-        'Bill Terry',
-        'Rogers Hornsby',
-        'Lou Brock',
-        'Ted Williams',
-        'Bill Dickey',
-        'Christy Mathewson',
-        'Willie McCovey',
-        'Lou Gehrig',
-        'George Brett',
-        'Hank Aaron',
-        'Harry Heilmann',
-        'Walter Johnson',
-        'Roger Clemens',
-        'Ty Cobb',
-        'Whitey Ford',
-        'Willie Mays',
-        'Rickey Henderson',
-        'Babe Ruth'
-    ];
 
-app.post('/api/login', async (req, res, next) => {
-    // incoming: login, password
-    // outgoing: id, firstName, lastName, error
-    var error = '';
-    const { login, password } = req.body;
-    const db = client.db('cop4331');
-    const results = await
-        db.collection('Users').find({ Login: login, Password: password }).toArray();
-    var id = -1;
-    var fn = '';
-    var ln = '';
-    if (results.length > 0) {
-        id = results[0].UserId;
-        fn = results[0].FirstName;
-        ln = results[0].LastName;
+// Import ObjectId from MongoDB
+const { MongoClient, ObjectId } = require('mongodb');
+
+// MongoDB connection string with database name included
+const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
+const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Connect to MongoDB and start the server
+client.connect()
+  .then(() => {
+    console.log('Connected to MongoDB');
+
+
+    const db = client.db('COP4331'); // Ensure this matches your database name exactly
+
+
+
+// Route: /api/register
+app.post('/api/register', async (req, res) => {
+  const { FirstName, LastName, Username, Email, Password, CheckInFreq} = req.body;
+
+  // Validate required fields
+  if (!FirstName || !LastName || !Username || !Email || !Password || !CheckInFreq) {
+    return res.status(400).json({ error: 'All fields must be entered.' });
+  }
+
+  try {
+    // Check if the user already exists
+    const existingUser = await db.collection('Users').findOne({ Username: Username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists.' });
     }
-    var ret = { id: id, firstName: fn, lastName: ln, error: '' };
-    res.status(200).json(ret);
+
+    // Generate a new UserId by incrementing the highest existing UserId
+    let newUserId = 1; // Default to 1 if no users exist
+    const lastUser = await db.collection('Users').find().sort({ UserId: -1 }).limit(1).toArray();
+    if (lastUser.length > 0) {
+      newUserId = lastUser[0].UserId + 1;
+    }
+
+    // Insert the new user
+    await db.collection('Users').insertOne({
+      UserId: newUserId,
+      Username: Username,
+      Password: Password,
+      FirstName: FirstName,
+      LastName: LastName,
+      Email: Email,
+      CheckInFreq: CheckInFreq
+    });
+
+    res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+    // Route: /api/login
+    app.post('/api/login', async (req, res) => {
+      // Incoming: Username, Password
+      // Outgoing: UserId, FirstName, LastName, error
 
-app.post('/api/addcard', async (req, res, next) => {
-    // incoming: userId, color
-    // outgoing: error
-    const { userId, card } = req.body;
-    const newCard = { Card: card, UserId: userId };
-    var error = '';
-    try {
-        const db = client.db('cop4331');
-        const result = db.collection('Cards').insertOne(newCard);
-    }
-    catch (e) {
+      let error = '';
+
+      const { Username, Password } = req.body;
+
+      try {
+        const result = await db.collection('Users').findOne({ Username: Username, Password: Password });
+
+        if (result) {
+          const id = result.UserId;
+          const fn = result.FirstName;
+          const ln = result.LastName;
+          res.status(200).json({ id: id, firstName: fn, lastName: ln, error: '' });
+        } else {
+          res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
+        }
+      } catch (e) {
         error = e.toString();
+        res.status(500).json({ error: error });
+      }
+    });
+
+
+
+
+    // Route: /api/addcard
+    app.post('/api/addcard', async (req, res) => {
+      const { userId, card } = req.body;
+
+      // Convert userId to ObjectId
+      const userObjectId = new ObjectId(userId);
+
+      const newCard = { Card: card, UserId: userObjectId };
+      let error = '';
+
+      try {
+        await db.collection('Cards').insertOne(newCard);
+        res.status(200).json({ error: '' });
+      } catch (e) {
+        error = e.toString();
+        res.status(500).json({ error: error });
+      }
+    });
+
+    // Route: /api/searchcards
+    app.post('/api/searchcards', async (req, res) => {
+      const { userId, search } = req.body;
+
+      // Convert userId to ObjectId
+      const userObjectId = new ObjectId(userId);
+
+      const _search = search.trim();
+
+      try {
+        const results = await db.collection('Cards').find({
+          UserId: userObjectId,
+          Card: { $regex: '^' + _search, $options: 'i' },
+        }).toArray();
+
+        const _ret = results.map(result => result.Card);
+
+        res.status(200).json({ results: _ret, error: '' });
+      } catch (e) {
+        res.status(500).json({ results: [], error: e.toString() });
+      }
+    });
+
+    // Start the server after successful DB connection
+    app.listen(5000, '0.0.0.0', () => {
+      console.log('Server is running on port 5000');
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message);
+    process.exit(1);
+  });
+
+//displying recipients and messages
+  app.post('/api/recipients/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const recipients = await db.collection('Recipients').find({ userId }).toArray();
+      res.status(200).json({ recipients });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    cardList.push(card);
-    var ret = { error: error };
-    res.status(200).json(ret);
-});
+  });
 
-
-app.post('/api/searchcards', async (req, res, next) => {
-    // incoming: userId, search
-    // outgoing: results[], error
-    var error = '';
-    const { userId, search } = req.body;
-    var _search = search.trim();
-    const db = client.db('cop4331');
-    const results = await db.collection('Cards').find({ "Card": { $regex: _search + '.*', $options: 'r' } }).toArray();
-    var _ret = [];
-    for (var i = 0; i < results.length; i++) {
-        _ret.push(results[i].Card);
+  //to see the frequency of how many time to check in
+  app.post('/api/users/:userId/checkin-frequency', async (req, res) => {
+    const { userId } = req.params;
+    const { frequency } = req.body;
+  
+    try {
+      await db.collection('Users').updateOne({ _id: userId }, { $set: { checkInFrequency: frequency } });
+      res.status(200).json({ message: 'Check-in frequency updated successfully.' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    var ret = { results: _ret, error: error };
-    res.status(200).json(ret);
-});
+  });
+  
 
-
-
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-    );
-    res.setHeader(
-        'Access-Control-Allow-Methods',
-        'GET, POST, PATCH, DELETE, OPTIONS'
-    );
-    next();
-});
-app.listen(5000); // start Node + Express server on port 5000
+  //deletes the user
+  app.delete('/api/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      // Delete user's messages first if necessary
+      await db.collection('Messages').deleteMany({ $or: [{ senderId: userId }, { recipientId: userId }] });
+  
+      // Delete user account
+      const result = await db.collection('Users').deleteOne({ _id: userId });
+  
+      if (result.deletedCount === 1) {
+        res.status(200).json({ message: 'User account and associated data deleted successfully.' });
+      } else {
+        res.status(404).json({ error: 'User not found.' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Error deleting user: ' + error.message });
+    }
+  });
+  
+  
