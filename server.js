@@ -12,26 +12,27 @@ app.use(bodyParser.json());
 // Import ObjectId from MongoDB
 const { MongoClient, ObjectId } = require('mongodb');
 
+
 // MongoDB connection string with database name included
 const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
-
+let db;
 // Connect to MongoDB and start the server
 client.connect()
   .then(() => {
     console.log('Connected to MongoDB');
 
 
-    const db = client.db('COP4331'); // Ensure this matches your database name exactly
-
+    db = client.db('COP4331'); // Ensure this matches your database name exactly
 
 
 // Route: /api/register
 app.post('/api/register', async (req, res) => {
-  const { FirstName, LastName, Username, Email, Password, CheckInFreq} = req.body;
+  const { FirstName, LastName, Username, Email, Password } = req.body;
 
   // Validate required fields
-  if (!FirstName || !LastName || !Username || !Email || !Password || !CheckInFreq) {
+  if (!FirstName || !LastName || !Username || !Email || !Password) {
+
     return res.status(400).json({ error: 'All fields must be entered.' });
   }
 
@@ -57,7 +58,9 @@ app.post('/api/register', async (req, res) => {
       FirstName: FirstName,
       LastName: LastName,
       Email: Email,
+
       CheckInFreq: CheckInFreq
+
     });
 
     res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
@@ -145,6 +148,7 @@ app.post('/api/register', async (req, res) => {
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1);
+
   });
 
 //displying recipients and messages
@@ -195,3 +199,6 @@ app.post('/api/register', async (req, res) => {
   });
   
   
+
+
+
