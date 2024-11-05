@@ -15,15 +15,14 @@ const { MongoClient, ObjectId } = require('mongodb');
 // MongoDB connection string with database name included
 const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
-
+let db;
 // Connect to MongoDB and start the server
 client.connect()
   .then(() => {
     console.log('Connected to MongoDB');
 
 
-    const db = client.db('COP4331'); // Ensure this matches your database name exactly
-
+    db = client.db('COP4331'); // Ensure this matches your database name exactly
 
 
 // Route: /api/register
