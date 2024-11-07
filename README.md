@@ -16,7 +16,7 @@ npm install -g nodemon
 
 npm create vite@latest -> select react -> select typescript
 
-Now, clone the repo to a separate folder
+Now, clone the repo to a separate folder 
 
 open a terminal in your frontend folder
 
