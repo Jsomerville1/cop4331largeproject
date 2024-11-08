@@ -20,6 +20,7 @@ function Login() {
   const [email, setEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerMessage, setRegisterMessage] = useState('');
+  const [checkInFreq, setCheckInFreq] = useState<number | null>(null); // store frequency as integer
 
   // Clear registration fields only
   function clearRegistrationFields() {
@@ -28,6 +29,7 @@ function Login() {
     setRegisterUsername('');
     setEmail('');
     setRegisterPassword('');
+    setCheckInFreq(null); // reset check-in frequency
     setRegisterMessage('');
   }
 
@@ -60,12 +62,18 @@ function Login() {
 
   async function doRegister(event: any): Promise<void> {
     event.preventDefault();
+    if (!checkInFreq) {
+      setRegisterMessage('Please select a check-in frequency.');
+      return;
+    }
+
     const obj = {
       FirstName: firstName,
       LastName: lastName,
       Username: registerUsername,
       Email: email,
-      Password: registerPassword
+      Password: registerPassword,
+      CheckInFreq: checkInFreq
     };
     const js = JSON.stringify(obj);
 
@@ -86,14 +94,6 @@ function Login() {
     } catch (error: any) {
       alert(error.toString());
     }
-  }
-
-  function handleSetLoginName(e: any): void {
-    setLoginName(e.target.value);
-  }
-
-  function handleSetPassword(e: any): void {
-    setPassword(e.target.value);
   }
 
   return (
@@ -122,7 +122,7 @@ function Login() {
             id="loginName"
             placeholder="Username"
             value={loginName}
-            onChange={handleSetLoginName}
+            onChange={(e) => setLoginName(e.target.value)}
             className="login-input"
           />
 
@@ -131,7 +131,7 @@ function Login() {
             id="loginPassword"
             placeholder="Password"
             value={loginPassword}
-            onChange={handleSetPassword}
+            onChange={(e) => setPassword(e.target.value)}
             className="login-input"
           />
 
@@ -187,6 +187,46 @@ function Login() {
             onChange={(e) => setEmail(e.target.value)}
             className="login-input"
           />
+
+          <div className="check-in-frequency">
+            <label>Check-In Frequency:</label>
+            <div className="radio-option">
+              <input
+                type="radio"
+                value={120} // 2 minutes in seconds
+                checked={checkInFreq === 120}
+                onChange={(e) => setCheckInFreq(parseInt(e.target.value))}
+              />
+              2 Minutes
+            </div>
+            <div className="radio-option">
+              <input
+                type="radio"
+                value={604800} // 7 days in seconds
+                checked={checkInFreq === 604800}
+                onChange={(e) => setCheckInFreq(parseInt(e.target.value))}
+              />
+              1 Week (7 Days)
+            </div>
+            <div className="radio-option">
+              <input
+                type="radio"
+                value={2592000} // 1 month (30 days) in seconds
+                checked={checkInFreq === 2592000}
+                onChange={(e) => setCheckInFreq(parseInt(e.target.value))}
+              />
+              1 Month (30 Days)
+            </div>
+            <div className="radio-option">
+              <input
+                type="radio"
+                value={31536000} // 1 year in seconds
+                checked={checkInFreq === 31536000}
+                onChange={(e) => setCheckInFreq(parseInt(e.target.value))}
+              />
+              1 Year (365 Days)
+            </div>
+          </div>
 
           <button onClick={doRegister} className="login-button">
             Register

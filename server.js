@@ -28,12 +28,11 @@ client.connect()
 
 // Route: /api/register
 app.post('/api/register', async (req, res) => {
-  const { FirstName, LastName, Username, Email, Password } = req.body;
+  const { FirstName, LastName, Username, Email, Password, CheckInFreq } = req.body;
 
   // Validate required fields
-  if (!FirstName || !LastName || !Username || !Email || !Password) {
-
-    return res.status(400).json({ error: 'All fields must be entered.' });
+  if (!FirstName || !LastName || !Username || !Email || !Password || !CheckInFreq) {
+    return res.status(400).json({ error: 'All fields must be entered, including Check-In Frequency.' });
   }
 
   try {
@@ -50,22 +49,22 @@ app.post('/api/register', async (req, res) => {
       newUserId = lastUser[0].UserId + 1;
     }
 
-    // Insert the new user
-    await db.collection('Users').insertOne({
+    // Create the new user document
+    const newUser = {
       UserId: newUserId,
-      Username: Username,
-      Password: Password,
-      FirstName: FirstName,
-      LastName: LastName,
-      Email: Email,
+      FirstName,
+      LastName,
+      Username,
+      Email,
+      Password,
+      CheckInFreq // Store the check-in frequency
+    };
 
-      CheckInFreq: CheckInFreq
-
-    });
-
-    res.status(200).json({ message: 'User registered successfully.', userId: newUserId });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    await db.collection('Users').insertOne(newUser);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
