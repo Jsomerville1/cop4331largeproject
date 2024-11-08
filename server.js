@@ -1,9 +1,12 @@
 // server.js
+require('dotenv').config();
+
+const { v4: uuidv4 } = require('uuid');
+const sendEmail = require('./sendEmail'); // points to sendEmail function in sendEmail.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 //const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -48,6 +51,10 @@ app.post('/api/register', async (req, res) => {
       newUserId = lastUser[0].UserId + 1;
     }
 
+    // Generate a verification code
+    const verificationCode = uuidv4().slice(0, 8);
+
+
     // Create the new user document
     const newUser = {
       UserId: newUserId,
@@ -55,12 +62,23 @@ app.post('/api/register', async (req, res) => {
       LastName,
       Username,
       Email,
-      Password,
-      CheckInFreq
+      Password, // ****** NEED TO HASH PASSWORD
+      CheckInFreq,
+      Verified: false,
+      verificationCode // temp code for email verification
     };
 
+    // insert the new user into the db
     await db.collection('Users').insertOne(newUser);
-    res.json({ success: true });
+
+    // send verification email
+    await sendEmail(Email, 'Verify Your Account', `Your verification code is: ${verificationCode}`);
+    res.status(200).json({
+      message: 'Registration successful. Please check your email for the verification code.',
+      userId: newUserId,
+    });
+
+    //res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -83,7 +101,14 @@ app.post('/api/register', async (req, res) => {
           const id = result.UserId;
           const fn = result.FirstName;
           const ln = result.LastName;
-          res.status(200).json({ id: id, firstName: fn, lastName: ln, error: '' });
+          const verified = result.Verified;
+          // check if user has verified email
+          if (!verified) {
+            res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Please verify your account'});
+          } else {
+            // user is verified, allow login
+            res.status(200).json({ id: id, firstName: fn, lastName: ln, verified: verified, error: '' });
+          }
         } else {
           res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
         }
@@ -205,6 +230,30 @@ app.post('/api/deleteUsers', async (req, res) => {
     res.status(500).json({ error: 'Error deleting user: ' + error.message });
   }
 });
+
+// endpoint for user email verificaiton
+app.post('/api/verify', async (req, res) => {
+  const { Username, code } = req.body;
+
+  try {
+    const user = await db.collection('Users').findOne({ Username, verificationCode: code });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    // Update verification status
+    await db.collection('Users').updateOne(
+      { Username },
+      { $set: { Verified: true }, $unset: { verificationCode: "" } }
+    );
+
+    res.status(200).json({ message: 'Verification successful!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 //in progress

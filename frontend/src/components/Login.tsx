@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import gravestoneImage from '../assets/Gravestone.png';
 
 function Login() {
@@ -21,6 +21,12 @@ function Login() {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerMessage, setRegisterMessage] = useState('');
   const [checkInFreq, setCheckInFreq] = useState<number | null>(null); // store frequency as integer
+
+  // Verification fields
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState(false); // Tracks if verification was successful
 
   // Clear registration fields only
   function clearRegistrationFields() {
@@ -45,10 +51,16 @@ function Login() {
         headers: { 'Content-Type': 'application/json' }
       });
 
-      const res = JSON.parse(await response.text());
+      //const res = JSON.parse(await response.text());
+      const res = await response.json();
 
-      if (res.id <= 0) {
-        setMessage('User/Password combination incorrect');
+      //if (res.id <= 0) {
+      if (res.error) {
+        //setMessage('User/Password combination incorrect');
+        setMessage(res.error);
+      //} else {
+      } else if (res.Verified === false) {
+        setMessage('Please verify your account');
       } else {
         const user = { firstName: res.firstName, lastName: res.lastName, id: res.id };
         localStorage.setItem('user_data', JSON.stringify(user));
@@ -84,16 +96,46 @@ function Login() {
         headers: { 'Content-Type': 'application/json' }
       });
 
+    
       const res = JSON.parse(await response.text());
-
+      //const res = await response.json();
       if (res.error) {
         setRegisterMessage(res.error);
       } else {
-        setShowRegister(false);
+        setRegisterMessage('Registration successful! Please check your email for the verification code.');
+        setShowVerification(true); // Show verification input
       }
     } catch (error: any) {
       alert(error.toString());
     }
+  }
+
+  async function handleVerifyCode(event: any) {
+    event.preventDefault();
+
+    const response = await fetch(buildPath('api/verify'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Username: registerUsername, code: verificationCode })
+    });
+
+    const res = await response.json();
+    if (res.error) {
+      setVerificationMessage(res.error);
+    } else {
+      setVerificationMessage('Verification successful! You can now log in.');
+      setVerificationSuccess(true); // Indicate successful verification
+    }
+  }
+
+  // Handle returning to the login page after successful verification
+  function handleReturnToLogin() {
+    clearRegistrationFields();
+    setShowVerification(false);
+    setShowRegister(false);
+    setVerificationSuccess(false); // Reset verification success
+    setVerificationMessage('');
+    setVerificationCode('');
   }
 
   return (
@@ -148,6 +190,27 @@ function Login() {
           </div>
         </div>
       ) : (
+        showVerification ? (
+          // Verification Code Form
+          <div className="login-container" style={{ padding: '0 10px' }}>
+            <h3>Enter Verification Code</h3>
+            <input
+              type="text"
+              placeholder="Verification Code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              className="login-input"
+            />
+            <button onClick={handleVerifyCode} className="login-button">Verify</button>
+            <div className="login-message">{verificationMessage}</div>
+
+            {verificationSuccess && (
+              <button onClick={handleReturnToLogin} className="login-button">
+                Return to Login
+              </button>
+            )}
+          </div>
+        ) : (
         // Register Form
         <div id="registerDiv" className="login-container" style={{ padding: '0 10px' }}>
           <h2 className="login-title">Register Account</h2>
@@ -240,6 +303,7 @@ function Login() {
             {registerMessage}
           </div>
         </div>
+        )
       )}
     </div>
   );
