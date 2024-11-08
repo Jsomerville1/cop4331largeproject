@@ -12,7 +12,6 @@ app.use(bodyParser.json());
 // Import ObjectId from MongoDB
 const { MongoClient, ObjectId } = require('mongodb');
 
-
 // MongoDB connection string with database name included
 const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -28,11 +27,11 @@ client.connect()
 
 // Route: /api/register
 app.post('/api/register', async (req, res) => {
-  const { FirstName, LastName, Username, Email, Password, CheckInFreq } = req.body;
+  const { FirstName, LastName, Username, Email, Password, CheckInFreq} = req.body;
 
   // Validate required fields
   if (!FirstName || !LastName || !Username || !Email || !Password || !CheckInFreq) {
-    return res.status(400).json({ error: 'All fields must be entered, including Check-In Frequency.' });
+    return res.status(400).json({ error: 'All fields must be entered.' });
   }
 
   try {
@@ -57,7 +56,7 @@ app.post('/api/register', async (req, res) => {
       Username,
       Email,
       Password,
-      CheckInFreq // Store the check-in frequency
+      CheckInFreq
     };
 
     await db.collection('Users').insertOne(newUser);
@@ -93,7 +92,6 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: error });
       }
     });
-
 
 
 
@@ -147,12 +145,11 @@ app.post('/api/register', async (req, res) => {
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1);
-
   });
 
 //displying recipients and messages
-  app.post('/api/recipients/:userId', async (req, res) => {
-    const { userId } = req.params;
+  app.post('/api/recipients', async (req, res) => {
+    const { userId } = req.body;
   
     try {
       const recipients = await db.collection('Recipients').find({ userId }).toArray();
@@ -163,41 +160,63 @@ app.post('/api/register', async (req, res) => {
   });
 
   //to see the frequency of how many time to check in
-  app.post('/api/users/:userId/checkin-frequency', async (req, res) => {
-    const { userId } = req.params;
-    const { frequency } = req.body;
-  
-    try {
-      await db.collection('Users').updateOne({ _id: userId }, { $set: { checkInFrequency: frequency } });
+// Update check-in frequency
+app.post('/api/checkin-frequency', async (req, res) => {
+  const userId = Number(req.body.userId);  // Ensure userId is a number
+  const frequency = Number(req.body.CheckInFreq);  // Ensure frequency is a number
+
+  try {
+    // Update the user's CheckInFreq by UserId
+    const result = await db.collection('Users').updateOne(
+      { UserId: userId }, // Query by UserId
+      { $set: { CheckInFreq: frequency } } // Set the correct field name
+    );
+
+    if (result.modifiedCount === 1) {
       res.status(200).json({ message: 'Check-in frequency updated successfully.' });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    } else {
+      res.status(404).json({ error: 'User not found.' });
     }
-  });
-  
+  } catch (error) {
+    console.error("Error updating CheckInFreq:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
   //deletes the user
-  app.delete('/api/users/:userId', async (req, res) => {
-    const { userId } = req.params;
-  
-    try {
-      // Delete user's messages first if necessary
-      await db.collection('Messages').deleteMany({ $or: [{ senderId: userId }, { recipientId: userId }] });
-  
-      // Delete user account
-      const result = await db.collection('Users').deleteOne({ _id: userId });
-  
-      if (result.deletedCount === 1) {
-        res.status(200).json({ message: 'User account and associated data deleted successfully.' });
-      } else {
-        res.status(404).json({ error: 'User not found.' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: 'Error deleting user: ' + error.message });
+app.post('/api/deleteUsers', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    // Ensure userId is treated as a number or string, depending on how it's stored in the database
+    // Delete user's messages first if necessary
+    await db.collection('Messages').deleteMany({ userId: userId });
+    await db.collection('Recipients').deleteMany({ userId: userId });
+
+    // Delete user account
+    const result = await db.collection('Users').deleteOne({ UserId: userId }); // Query by UserId instead of _id
+
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: 'User account and associated data deleted successfully.' });
+    } else {
+      res.status(404).json({ error: 'User not found.' });
     }
-  });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting user: ' + error.message });
+  }
+});
+
+
+//in progress
+
+  // app.post('/api/checkIn', async (req,res) => {
+  //   const{userId} = req.body;
+
+  //   try{
+  //     await db.collection('CheckIns').insertOne({userId, date: new Date(), status:"checked-in"});
+  //     res.status(200).json({message:'You checked in!'});
+  //   }catch(error){
+  //     res.status(404).json({error: 'Could not check you in'});
+  //   }
+  // });
   
-  
-
-
-
