@@ -177,7 +177,7 @@ app.post('/api/register', async (req, res) => {
     const { userId } = req.body;
   
     try {
-      const recipients = await db.collection('Recipients').find({ userId }).toArray();
+      const recipients = await db.collection('Recipients').find({ userId: Number(userId) }).toArray();
       res.status(200).json({ recipients });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -208,7 +208,7 @@ app.post('/api/checkin-frequency', async (req, res) => {
   }
 });
 
-  //deletes the user
+  // DELETE USER ACCOUNT
 app.post('/api/deleteUsers', async (req, res) => {
   const { userId } = req.body;
 
@@ -231,7 +231,8 @@ app.post('/api/deleteUsers', async (req, res) => {
   }
 });
 
-// endpoint for user email verificaiton
+
+// EMAIL VERIFICATION
 app.post('/api/verify', async (req, res) => {
   const { Username, code } = req.body;
 
@@ -255,6 +256,7 @@ app.post('/api/verify', async (req, res) => {
 });
 
 
+// ADD MESSAGE
 // Route: /api/addmessage
 app.post('/api/addmessage', async (req, res) => {
   const { userId, content } = req.body;
@@ -297,6 +299,7 @@ app.post('/api/addmessage', async (req, res) => {
   }
 });
 
+// EDIT MESSAGE
 // Route: /api/editmessage
 app.post('/api/editmessage', async (req, res) => {
   const { messageId, userId, content } = req.body;
@@ -331,6 +334,7 @@ app.post('/api/editmessage', async (req, res) => {
   }
 });
 
+// DELETE MESSAGE
 // Route: /api/deletemessage
 app.post('/api/deletemessage', async (req, res) => {
   const { messageId, userId } = req.body;
@@ -362,21 +366,140 @@ app.post('/api/deletemessage', async (req, res) => {
   }
 });
 
+/*
+//Route: /api/addRecipients
+app.post('/api/addRecipients', (req, res) => {
+  const { firstName, lastName, email } = req.body;
+
+  const sql = 'INSERT INTO recipients (FirstName, LastName, Email) VALUES (?, ?, ?)';
+  db.query(sql, [firstName, lastName, email], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to add recipient' });
+    }
+    res.status(201).json({ message: 'Recipient added successfully', recipientId: result.insertId });
+  });
+});
+
+//Route: /api/editRecipients
+app.put('/api/editRecipients', (req, res) => {
+  const { id, firstName, lastName, email } = req.body;
+
+  const sql = 'UPDATE recipients SET FirstName = ?, LastName = ?, Email = ? WHERE RecipientID = ?';
+  db.query(sql, [firstName, lastName, email, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to update recipient' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+    res.status(200).json({ message: 'Recipient updated successfully' });
+  });
+});
+
+//Route: /api/deleteRecipients
+app.delete('/api/deleteRecipients', (req, res) => {
+  const { id } = req.body;
+
+  const sql = 'DELETE FROM recipients WHERE RecipientID = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to delete recipient' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+    res.status(200).json({ message: 'Recipient deleted successfully' });
+  });
+});
+
+*/
+
+// ADD RECIPIENT
+// Route: /api/addRecipient
+app.post('/api/addRecipient', async (req, res) => {
+  const { username, recipientName, recipientEmail, messageId } = req.body;
+
+  // Validate required fields
+  if (!username || !recipientName || !recipientEmail || !messageId) {
+    return res.status(400).json({ error: 'All fields (username, recipientName, recipientEmail, messageId) are required.' });
+  }
+
+  try {
+    // Retrieve the userId from the Users collection based on username
+    const user = await db.collection('Users').findOne({ Username: username });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    const userId = user.UserId;
+
+    // Add the new recipient with userId to the Recipients collection
+    const newRecipient = {
+      recipientId: uuidv4(),  // Generate unique ID for recipient
+      userId,                 // Associate recipient with this user
+      recipientName,
+      recipientEmail,
+      messageId,
+      createdAt: new Date()    // Optional: track when the recipient was added
+    };
+
+    await db.collection('Recipients').insertOne(newRecipient);
+
+    res.status(201).json({ message: 'Recipient added successfully', recipientId: newRecipient.recipientId });
+  } catch (error) {
+    console.error('Error adding recipient:', error);
+    res.status(500).json({ error: 'Failed to add recipient' });
+  }
+});
 
 
+// EDIT RECIPIENT
+app.post('/api/editRecipient', async (req, res) => {
+  const { recipientId, messageId, recipientName, recipientEmail } = req.body;
 
+  if (!recipientId || !messageId || !recipientName || !recipientEmail) {
+    return res.status(400).json({ error: 'All fields (recipientId, messageId, recipientName, recipientEmail) are required.' });
+  }
 
+  try {
+    const result = await db.collection('Recipients').updateOne(
+      { recipientId: Number(recipientId), messageId: Number(messageId) },
+      { $set: { recipientName: recipientName, recipientEmail: recipientEmail } }
+    );
 
-//in progress
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
 
-  // app.post('/api/checkIn', async (req,res) => {
-  //   const{userId} = req.body;
+    res.status(200).json({ message: 'Recipient updated successfully' });
+  } catch (err) {
+    console.error('Error updating recipient:', err);
+    res.status(500).json({ error: 'Failed to update recipient' });
+  }
+});
 
-  //   try{
-  //     await db.collection('CheckIns').insertOne({userId, date: new Date(), status:"checked-in"});
-  //     res.status(200).json({message:'You checked in!'});
-  //   }catch(error){
-  //     res.status(404).json({error: 'Could not check you in'});
-  //   }
-  // });
-  
+// DELETE RECIPIENT
+app.post('/api/deleteRecipient', async (req, res) => {
+  const { recipientId } = req.body;
+
+  if (!recipientId) {
+    return res.status(400).json({ error: 'recipientId required.' });
+  }
+
+  try {
+    const result = await db.collection('Recipients').deleteOne({
+      recipientId: Number(recipientId),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    res.status(200).json({ message: 'Recipient deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting recipient:', err);
+    res.status(500).json({ error: 'Failed to delete recipient' });
+  }
+});
