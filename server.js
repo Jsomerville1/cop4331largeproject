@@ -255,6 +255,117 @@ app.post('/api/verify', async (req, res) => {
 });
 
 
+// Route: /api/addmessage
+app.post('/api/addmessage', async (req, res) => {
+  const { userId, content } = req.body;
+
+  // Validate required fields
+  if (!userId || !content) {
+    return res.status(400).json({ error: 'userId and content are required.' });
+  }
+
+  const userIdNumber = Number(userId);
+  if (isNaN(userIdNumber)) {
+    return res.status(400).json({ error: 'userId must be a number.' });
+  }
+
+  try {
+    // Generate a new messageId by incrementing the highest existing messageId
+    let newMessageId = 1; // Default to 1 if no messages exist
+    const lastMessage = await db.collection('Messages').find().sort({ messageId: -1 }).limit(1).toArray();
+    if (lastMessage.length > 0) {
+      newMessageId = lastMessage[0].messageId + 1;
+    }
+
+    // Create the new message document
+    const newMessage = {
+      messageId: newMessageId,
+      userId: userIdNumber,
+      content: content,
+      isSent: false,
+      createdAt: new Date(),
+      sendAt: null
+    };
+
+    // Insert the new message into the db
+    await db.collection('Messages').insertOne(newMessage);
+
+    res.status(200).json({ message: 'Message added successfully.', messageId: newMessageId });
+  } catch (err) {
+    console.error('Error adding message:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Route: /api/editmessage
+app.post('/api/editmessage', async (req, res) => {
+  const { messageId, userId, content } = req.body;
+
+  // Validate required fields
+  if (!messageId || !userId || !content) {
+    return res.status(400).json({ error: 'messageId, userId, and content are required.' });
+  }
+
+  const messageIdNumber = Number(messageId);
+  const userIdNumber = Number(userId);
+
+  if (isNaN(messageIdNumber) || isNaN(userIdNumber)) {
+    return res.status(400).json({ error: 'messageId and userId must be numbers.' });
+  }
+
+  try {
+    // Update the message content
+    const result = await db.collection('Messages').updateOne(
+      { messageId: messageIdNumber, userId: userIdNumber },
+      { $set: { content: content } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Message not found or user does not have permission to edit this message.' });
+    }
+
+    res.status(200).json({ message: 'Message updated successfully.' });
+  } catch (err) {
+    console.error('Error editing message:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Route: /api/deletemessage
+app.post('/api/deletemessage', async (req, res) => {
+  const { messageId, userId } = req.body;
+
+  // Validate required fields
+  if (!messageId || !userId) {
+    return res.status(400).json({ error: 'messageId and userId are required.' });
+  }
+
+  const messageIdNumber = Number(messageId);
+  const userIdNumber = Number(userId);
+
+  if (isNaN(messageIdNumber) || isNaN(userIdNumber)) {
+    return res.status(400).json({ error: 'messageId and userId must be numbers.' });
+  }
+
+  try {
+    // Delete the message
+    const result = await db.collection('Messages').deleteOne({ messageId: messageIdNumber, userId: userIdNumber });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Message not found or user does not have permission to delete this message.' });
+    }
+
+    res.status(200).json({ message: 'Message deleted successfully.' });
+  } catch (err) {
+    console.error('Error deleting message:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
+
 
 //in progress
 
