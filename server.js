@@ -54,6 +54,10 @@ app.post('/api/register', async (req, res) => {
     // Generate a verification code
     const verificationCode = uuidv4().slice(0, 8);
 
+    const lastLogin = null;
+    const status = "Active";
+    const createdAt = new Date();
+
 
     // Create the new user document
     const newUser = {
@@ -65,7 +69,10 @@ app.post('/api/register', async (req, res) => {
       Password, // ****** NEED TO HASH PASSWORD
       CheckInFreq,
       Verified: false,
-      verificationCode // temp code for email verification
+      verificationCode, // temp code for email verification
+      lastLogin: lastLogin,
+      status: status,
+      createdAt: createdAt
     };
 
     // insert the new user into the db
@@ -102,6 +109,7 @@ app.post('/api/register', async (req, res) => {
           const fn = result.FirstName;
           const ln = result.LastName;
           const verified = result.Verified;
+          $set: lastLogin: new Date();
           // check if user has verified email
           if (!verified) {
             res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Please verify your account'});
@@ -258,14 +266,30 @@ app.post('/api/verify', async (req, res) => {
 
 //in progress
 
-  // app.post('/api/checkIn', async (req,res) => {
-  //   const{userId} = req.body;
+app.post('/api/checkIn', async (req,res) => {
+  const{userId} = req.body;
 
-  //   try{
-  //     await db.collection('CheckIns').insertOne({userId, date: new Date(), status:"checked-in"});
-  //     res.status(200).json({message:'You checked in!'});
-  //   }catch(error){
-  //     res.status(404).json({error: 'Could not check you in'});
-  //   }
-  // });
+  try{
+
+    const result = await db.collection('Users').updateOne(
+      {userId: userId},
+      {
+        $set: {
+          lastCheckIn: new Date(),
+          status: 'Checked In'
+        },
+        $inc: {frequency: 1}
+      },
+      {upsert: true}
+    );
+
+    res.status(200).json({message:'You checked in!', result});
+  }catch(error){
+    res.status(404).json({error: 'Could not check you in'});
+  }
+});
+
+
+
+
   
