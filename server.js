@@ -545,3 +545,36 @@ app.post('/api/checkIn', async (req,res) => {
   }
 });
 
+// GET A USERS MESSAGES
+// Route: /api/getUserMessages
+app.post('/api/getUserMessages', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    // Ensure userId is a number
+    const userIdNumber = Number(userId);
+    if (isNaN(userIdNumber)) {
+      return res.status(400).json({ error: 'Invalid userId.' });
+    }
+
+    // Use MongoDB's aggregation framework to join Messages and Recipients
+    const messages = await db.collection('Messages').aggregate([
+      {
+        $match: { userId: userIdNumber }
+      },
+      {
+        $lookup: {
+          from: 'Recipients',
+          localField: 'messageId',
+          foreignField: 'messageId',
+          as: 'recipients'
+        }
+      }
+    ]).toArray();
+
+    res.status(200).json({ messages });
+  } catch (error) {
+    console.error('Error retrieving user messages:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
