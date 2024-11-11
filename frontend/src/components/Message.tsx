@@ -1,15 +1,20 @@
-// src/components/Messages.tsx
+// src/components/Message.tsx
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Table, Modal, Form } from 'react-bootstrap';
+import './Message.css'; // Import the CSS file
 
-function Messages() {
+function Message() {
   const [messages, setMessages] = useState<any[]>([]);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModalData, setMessageModalData] = useState({ content: '', messageId: null });
   const [showRecipientModal, setShowRecipientModal] = useState(false);
-  const [recipientModalData, setRecipientModalData] = useState({ recipientName: '', recipientEmail: '', recipientId: null, messageId: null });
+  const [recipientModalData, setRecipientModalData] = useState({
+    recipientName: '',
+    recipientEmail: '',
+    recipientId: null,
+    messageId: null,
+  });
 
   const user = JSON.parse(localStorage.getItem('user_data') || '{}');
   const userId = user.id;
@@ -20,9 +25,7 @@ function Messages() {
   }, []);
 
   function buildPath(route: string): string {
-    return import.meta.env.MODE === 'development'
-      ? 'http://localhost:5000/' + route
-      : '/' + route;
+    return import.meta.env.MODE === 'development' ? 'http://localhost:5000/' + route : '/' + route;
   }
 
   const fetchMessages = async () => {
@@ -145,12 +148,13 @@ function Messages() {
   };
 
   return (
-    <div className="container mt-4">
+    <div className="messages-container">
       <h3>Your Messages</h3>
-      <Button variant="primary" onClick={handleAddMessage}>
+      <button onClick={handleAddMessage} className="add-message-button">
         Add Message
-      </Button>
-      <Table striped bordered hover className="mt-3">
+      </button>
+
+      <table className="messages-table">
         <thead>
           <tr>
             <th>Message ID</th>
@@ -162,27 +166,21 @@ function Messages() {
         <tbody>
           {messages.map((message) => (
             <React.Fragment key={message.messageId}>
-              <tr>
+              <tr className="message-row">
                 <td>{message.messageId}</td>
                 <td>{message.content}</td>
                 <td>{new Date(message.createdAt).toLocaleString()}</td>
                 <td>
-                  <Button variant="secondary" size="sm" onClick={() => handleEditMessage(message)}>
-                    Edit
-                  </Button>{' '}
-                  <Button variant="danger" size="sm" onClick={() => handleDeleteMessage(message.messageId)}>
-                    Delete
-                  </Button>{' '}
-                  <Button variant="success" size="sm" onClick={() => handleAddRecipient(message.messageId)}>
-                    Add Recipient
-                  </Button>
+                  <button onClick={() => handleEditMessage(message)}>Edit</button>{' '}
+                  <button onClick={() => handleDeleteMessage(message.messageId)}>Delete</button>{' '}
+                  <button onClick={() => handleAddRecipient(message.messageId)}>Add Recipient</button>
                 </td>
               </tr>
               {/* Recipients */}
               {message.recipients && message.recipients.length > 0 && (
-                <tr>
+                <tr className="recipients-row">
                   <td colSpan={4}>
-                    <Table bordered>
+                    <table className="recipients-table">
                       <thead>
                         <tr>
                           <th>Recipient Name</th>
@@ -196,89 +194,66 @@ function Messages() {
                             <td>{recipient.recipientName}</td>
                             <td>{recipient.recipientEmail}</td>
                             <td>
-                              <Button variant="secondary" size="sm" onClick={() => handleEditRecipient(recipient)}>
-                                Edit
-                              </Button>{' '}
-                              <Button variant="danger" size="sm" onClick={() => handleDeleteRecipient(recipient.recipientId)}>
-                                Delete
-                              </Button>
+                              <button onClick={() => handleEditRecipient(recipient)}>Edit</button>{' '}
+                              <button onClick={() => handleDeleteRecipient(recipient.recipientId)}>Delete</button>
                             </td>
                           </tr>
                         ))}
                       </tbody>
-                    </Table>
+                    </table>
                   </td>
                 </tr>
               )}
             </React.Fragment>
           ))}
         </tbody>
-      </Table>
+      </table>
 
       {/* Message Modal */}
-      <Modal show={showMessageModal} onHide={() => setShowMessageModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{messageModalData.messageId ? 'Edit Message' : 'Add Message'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="messageContent">
-              <Form.Label>Message Content</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={messageModalData.content}
-                onChange={(e) => setMessageModalData({ ...messageModalData, content: e.target.value })}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowMessageModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleMessageModalSave}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {showMessageModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>{messageModalData.messageId ? 'Edit Message' : 'Add Message'}</h2>
+            <textarea
+              rows={5}
+              value={messageModalData.content}
+              onChange={(e) => setMessageModalData({ ...messageModalData, content: e.target.value })}
+              placeholder="Enter your message content here..."
+            />
+            <div className="modal-buttons">
+              <button onClick={() => setShowMessageModal(false)}>Cancel</button>
+              <button onClick={handleMessageModalSave}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recipient Modal */}
-      <Modal show={showRecipientModal} onHide={() => setShowRecipientModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{recipientModalData.recipientId ? 'Edit Recipient' : 'Add Recipient'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="recipientName">
-              <Form.Label>Recipient Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={recipientModalData.recipientName}
-                onChange={(e) => setRecipientModalData({ ...recipientModalData, recipientName: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="recipientEmail">
-              <Form.Label>Recipient Email</Form.Label>
-              <Form.Control
-                type="email"
-                value={recipientModalData.recipientEmail}
-                onChange={(e) => setRecipientModalData({ ...recipientModalData, recipientEmail: e.target.value })}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowRecipientModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleRecipientModalSave}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {showRecipientModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>{recipientModalData.recipientId ? 'Edit Recipient' : 'Add Recipient'}</h2>
+            <input
+              type="text"
+              placeholder="Recipient Name"
+              value={recipientModalData.recipientName}
+              onChange={(e) => setRecipientModalData({ ...recipientModalData, recipientName: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="Recipient Email"
+              value={recipientModalData.recipientEmail}
+              onChange={(e) => setRecipientModalData({ ...recipientModalData, recipientEmail: e.target.value })}
+            />
+            <div className="modal-buttons">
+              <button onClick={() => setShowRecipientModal(false)}>Cancel</button>
+              <button onClick={handleRecipientModalSave}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default Messages;
+export default Message;
