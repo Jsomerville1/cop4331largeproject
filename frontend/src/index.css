@@ -118,7 +118,7 @@ h1 {
 }
 
 .login-message.success {
-  color: green;
+  color: rgb(21, 209, 21);
 }
 
 .check-in-frequency {
@@ -149,10 +149,14 @@ h1 {
   accent-color: green;
 }
 
+.delete-account-button {
+  background-color: rgb(158, 10, 10);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-color: #494949;
   }
   a:hover {
     color: #747bff;

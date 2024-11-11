@@ -193,7 +193,7 @@ function Login() {
         showVerification ? (
           // Verification Code Form
           <div className="login-container" style={{ padding: '0 10px' }}>
-            <h3>Enter Verification Code</h3>
+            <h3>Enter Email Verification Code</h3>
             <input
               type="text"
               placeholder="Verification Code"
@@ -202,7 +202,10 @@ function Login() {
               className="login-input"
             />
             <button onClick={handleVerifyCode} className="login-button">Verify</button>
-            <div className="login-message">{verificationMessage}</div>
+            
+            <div className={`login-message ${verificationSuccess ? 'success' : ''}`}>
+              {verificationMessage}
+            </div>
 
             {verificationSuccess && (
               <button onClick={handleReturnToLogin} className="login-button">
@@ -210,6 +213,7 @@ function Login() {
               </button>
             )}
           </div>
+
         ) : (
         // Register Form
         <div id="registerDiv" className="login-container" style={{ padding: '0 10px' }}>

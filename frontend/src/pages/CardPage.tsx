@@ -1,6 +1,8 @@
 import PageTitle from '../components/PageTitle';
 import LoggedInName from '../components/LoggedInName';
-import CardUI from '../components/CardUI';
+import CheckIn from '../components/CheckIn';
+import MessageField from '../components/Message';
+import Recipients from '../components/Recipients';
 
 const CardPage = () =>
 {
@@ -8,7 +10,9 @@ const CardPage = () =>
         <div>
             <PageTitle />
             <LoggedInName />
-            <CardUI />
+            <CheckIn />
+            <Recipients />
+            <MessageField />
         </div>
     );
 }
