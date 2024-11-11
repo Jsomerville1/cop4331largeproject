@@ -105,10 +105,17 @@ app.post('/api/register', async (req, res) => {
         const result = await db.collection('Users').findOne({ Username: Username, Password: Password });
 
         if (result) {
-          const id = result.UserId;
-          const fn = result.FirstName;
-          const ln = result.LastName;
-          const verified = result.Verified;
+          const { 
+            UserId: id, 
+            FirstName: fn, 
+            LastName: ln, 
+            Username: username, 
+            Email: email, 
+            CheckInFreq: checkInFreq, 
+            Verified: verified, 
+            deceased, 
+            createdAt 
+          } = result;
          
           try {
             await db.collection('Users').updateOne(
@@ -123,8 +130,18 @@ app.post('/api/register', async (req, res) => {
           if (!verified) {
             res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Please verify your account'});
           } else {
-            // user is verified, allow login
-            res.status(200).json({ id: id, firstName: fn, lastName: ln, verified: verified, error: '' });
+            res.status(200).json({ 
+              id, 
+              firstName: fn, 
+              lastName: ln, 
+              username, 
+              email, 
+              checkInFreq, 
+              verified, 
+              deceased, 
+              createdAt, 
+              error: '' 
+            });
           }
         } else {
           res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
@@ -544,6 +561,7 @@ app.post('/api/checkIn', async (req,res) => {
     res.status(404).json({error: 'Could not check you in'});
   }
 });
+
 
 // GET A USERS MESSAGES
 // Route: /api/getUserMessages
