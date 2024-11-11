@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 
 function CardUI()
 {
-    function buildPath(route: string): string {
+    /*function buildPath(route: string): string {
         //const app_name = 'copteam22.xyz';
         if (import.meta.env.MODE === 'development') {
           return 'http://localhost:5000/' + route;
         } else {
           return '/' + route; // Use relative path in production
         }
+      } */
+      function buildPath(route: string): string {
+        const isDevelopment = process.env.NODE_ENV === "development";
+        return isDevelopment ? `http://localhost:5000/${route}` : `/${route}`;
       }
 
   

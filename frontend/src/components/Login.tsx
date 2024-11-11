@@ -1,11 +1,16 @@
 import { useState } from 'react';
+//import react from 'react';
 import gravestoneImage from '../assets/Gravestone.png';
 
 function Login() {
-  function buildPath(route: string): string {
+  /*function buildPath(route: string): string {
     return import.meta.env.MODE === 'development'
       ? 'http://localhost:5000/' + route
       : '/' + route;
+  } */
+  function buildPath(route: string): string {
+    const isDevelopment = process.env.NODE_ENV === "development";
+    return isDevelopment ? `http://localhost:5000/${route}` : `/${route}`;
   }
 
   const [message, setMessage] = useState('');
