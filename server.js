@@ -402,56 +402,7 @@ app.post('/api/deletemessage', async (req, res) => {
   }
 });
 
-/*
-//Route: /api/addRecipients
-app.post('/api/addRecipients', (req, res) => {
-  const { firstName, lastName, email } = req.body;
 
-  const sql = 'INSERT INTO recipients (FirstName, LastName, Email) VALUES (?, ?, ?)';
-  db.query(sql, [firstName, lastName, email], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Failed to add recipient' });
-    }
-    res.status(201).json({ message: 'Recipient added successfully', recipientId: result.insertId });
-  });
-});
-
-//Route: /api/editRecipients
-app.put('/api/editRecipients', (req, res) => {
-  const { id, firstName, lastName, email } = req.body;
-
-  const sql = 'UPDATE recipients SET FirstName = ?, LastName = ?, Email = ? WHERE RecipientID = ?';
-  db.query(sql, [firstName, lastName, email, id], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Failed to update recipient' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Recipient not found' });
-    }
-    res.status(200).json({ message: 'Recipient updated successfully' });
-  });
-});
-
-//Route: /api/deleteRecipients
-app.delete('/api/deleteRecipients', (req, res) => {
-  const { id } = req.body;
-
-  const sql = 'DELETE FROM recipients WHERE RecipientID = ?';
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Failed to delete recipient' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Recipient not found' });
-    }
-    res.status(200).json({ message: 'Recipient deleted successfully' });
-  });
-});
-
-*/
 
 // ADD RECIPIENT
 // Route: /api/addRecipient
@@ -470,10 +421,17 @@ app.post('/api/addRecipient', async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
     const userId = user.UserId;
-
+    
+      // Generate a new recipientId by incrementing the highest existing recipientId
+      let newRecipientId = 1; // Default to 1 if no messages exist
+      const lastId = await db.collection('Recipients').find().sort({ recipientId: -1 }).limit(1).toArray();
+      if (lastId.length > 0) {
+        newRecipientId = lastId[0].recipientId + 1;
+      }
+    
     // Add the new recipient with userId to the Recipients collection
     const newRecipient = {
-      recipientId: uuidv4(),  // Generate unique ID for recipient
+      recipientId: newRecipientId,  // Generate unique ID for recipient
       userId,                 // Associate recipient with this user
       recipientName,
       recipientEmail,
@@ -488,6 +446,7 @@ app.post('/api/addRecipient', async (req, res) => {
     console.error('Error adding recipient:', error);
     res.status(500).json({ error: 'Failed to add recipient' });
   }
+  
 });
 
 
@@ -564,3 +523,36 @@ app.post('/api/checkIn', async (req,res) => {
   }
 });
 
+// GET A USERS MESSAGES
+// Route: /api/getUserMessages
+app.post('/api/getUserMessages', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    // Ensure userId is a number
+    const userIdNumber = Number(userId);
+    if (isNaN(userIdNumber)) {
+      return res.status(400).json({ error: 'Invalid userId.' });
+    }
+
+    // Use MongoDB's aggregation framework to join Messages and Recipients
+    const messages = await db.collection('Messages').aggregate([
+      {
+        $match: { userId: userIdNumber }
+      },
+      {
+        $lookup: {
+          from: 'Recipients',
+          localField: 'messageId',
+          foreignField: 'messageId',
+          as: 'recipients'
+        }
+      }
+    ]).toArray();
+
+    res.status(200).json({ messages });
+  } catch (error) {
+    console.error('Error retrieving user messages:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
