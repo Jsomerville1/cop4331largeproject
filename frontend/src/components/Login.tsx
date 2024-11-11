@@ -65,7 +65,7 @@ function Login() {
         const user = { firstName: res.firstName, lastName: res.lastName, id: res.id };
         localStorage.setItem('user_data', JSON.stringify(user));
         setMessage('');
-        window.location.href = '/cards';
+        window.location.href = '/afterwords';
       }
     } catch (error: any) {
       alert(error.toString());
