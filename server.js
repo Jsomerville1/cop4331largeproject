@@ -6,7 +6,7 @@ const sendEmail = require('./sendEmail'); // points to sendEmail function in sen
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-//const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 app.use(cors());
@@ -30,7 +30,7 @@ client.connect()
 
 // Route: /api/register
 app.post('/api/register', async (req, res) => {
-  const { FirstName, LastName, Username, Email, Password, CheckInFreq} = req.body;
+  const { FirstName, LastName, Username, Email, Password, CheckInFreq } = req.body;
 
   // Validate required fields
   if (!FirstName || !LastName || !Username || !Email || !Password || !CheckInFreq) {
@@ -58,6 +58,8 @@ app.post('/api/register', async (req, res) => {
     const status = "Active";
     const createdAt = new Date();
 
+    // Hash the password using bcryptjs
+    const hashedPassword = await bcrypt.hash(Password, 10); // 10 is the salt rounds
 
     // Create the new user document
     const newUser = {
@@ -66,94 +68,96 @@ app.post('/api/register', async (req, res) => {
       LastName,
       Username,
       Email,
-      Password, // ****** NEED TO HASH PASSWORD
+      Password: hashedPassword, // Store the hashed password
       CheckInFreq,
       Verified: false,
-      verificationCode, // temp code for email verification
+      verificationCode, // Temporary code for email verification
       lastLogin: lastLogin,
       status: status,
       createdAt: createdAt
     };
 
-    // insert the new user into the db
+    // Insert the new user into the database
     await db.collection('Users').insertOne(newUser);
 
-    // send verification email
+    // Send verification email
     await sendEmail(Email, 'Verify Your Account', `Your verification code is: ${verificationCode}`);
     res.status(200).json({
       message: 'Registration successful. Please check your email for the verification code.',
       userId: newUserId,
     });
-
-    //res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-    // Route: /api/login
-    app.post('/api/login', async (req, res) => {
-      // Incoming: Username, Password
-      // Outgoing: UserId, FirstName, LastName, error
 
-      let error = '';
+// Route: /api/login
+app.post('/api/login', async (req, res) => {
+  const { Username, Password } = req.body;
 
-      const { Username, Password } = req.body;
+  try {
+    const result = await db.collection('Users').findOne({ Username: Username });
 
-      try {
-        const result = await db.collection('Users').findOne({ Username: Username, Password: Password });
+    if (result) {
+      // Check if the password matches using bcryptjs
+      const passwordMatch = await bcrypt.compare(Password, result.Password);
 
-        if (result) {
-          const { 
-            UserId: id, 
-            FirstName: fn, 
-            LastName: ln, 
-            Username: username, 
-            Email: email, 
-            CheckInFreq: checkInFreq, 
-            Verified: verified, 
-            deceased, 
-            createdAt,
-            lastLogin 
-          } = result;
-         
-          try {
-            await db.collection('Users').updateOne(
-              { UserId: id },
-              { $set: { lastLogin: new Date() } }
-            );
-          } catch (updateError) {
-            console.error("Error updating last login:", updateError);
-          }
+      if (passwordMatch) {
+        const {
+          UserId: id,
+          FirstName: fn,
+          LastName: ln,
+          Username: username,
+          Email: email,
+          CheckInFreq: checkInFreq,
+          Verified: verified,
+          deceased,
+          createdAt,
+          lastLogin,
+        } = result;
 
-          // check if user has verified email
-          if (!verified) {
-            res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Please verify your account'});
-          } else {
-            res.status(200).json({ 
-              id, 
-              firstName: fn, 
-              lastName: ln, 
-              username, 
-              email, 
-              checkInFreq, 
-              verified, 
-              deceased, 
-              createdAt,
-              lastLogin: new Date(), 
-              error: '' 
-            });
-          }
-        } else {
-          res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'User not found' });
+        try {
+          await db.collection('Users').updateOne(
+            { UserId: id },
+            { $set: { lastLogin: new Date() } }
+          );
+        } catch (updateError) {
+          console.error("Error updating last login:", updateError);
         }
-      } catch (e) {
-        error = e.toString();
-        res.status(500).json({ error: error });
-      }
-    });
 
+        // Check if user has verified email
+        if (!verified) {
+          res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Please verify your account' });
+        } else {
+          res.status(200).json({
+            id,
+            firstName: fn,
+            lastName: ln,
+            username,
+            email,
+            checkInFreq,
+            verified,
+            deceased,
+            createdAt,
+            lastLogin: new Date(),
+            error: ''
+          });
+        }
+      } else {
+        // Password does not match
+        res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username/password' });
+      }
+    } else {
+      // User not found
+      res.status(200).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username/password' });
+    }
+  } catch (e) {
+    console.error('Login error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
     // Route: /api/addcard
