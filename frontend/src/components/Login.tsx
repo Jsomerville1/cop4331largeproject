@@ -27,6 +27,7 @@ function Login() {
 
   // Verification fields
   const [showVerification, setShowVerification] = useState(false);
+  const [verificationUsername, setVerificationUsername] = useState(''); // New state variable
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationMessage, setVerificationMessage] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
@@ -50,6 +51,7 @@ function Login() {
     // Clear registration fields
     clearRegistrationFields();
     // Clear verification fields
+    setVerificationUsername('');
     setVerificationCode('');
     setVerificationMessage('');
     setVerificationSuccess(false);
@@ -77,7 +79,7 @@ function Login() {
       } else if (res.verified === false) {
         setMessage('Please verify your account');
         setShowVerification(true); // Show verification form
-        setRegisterUsername(loginName); // Set username for verification
+        setVerificationUsername(loginName); // Set username for verification
       } else {
         // Store all user data in localStorage
         const user = {
@@ -135,7 +137,7 @@ function Login() {
           'Registration successful! Please check your email for the verification code.'
         );
         setShowVerification(true); // Show verification input
-        setRegisterUsername(registerUsername); // Set username for verification
+        setVerificationUsername(registerUsername); // Set username for verification
       }
     } catch (error: any) {
       alert(error.toString());
@@ -145,15 +147,15 @@ function Login() {
   async function handleVerifyCode(event: any) {
     event.preventDefault();
 
-    if (!registerUsername) {
-      setVerificationMessage('Username is missing. Please log in or register.');
+    if (!verificationUsername) {
+      setVerificationMessage('Please enter your username.');
       return;
     }
 
     const response = await fetch(buildPath('api/verify'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Username: registerUsername, code: verificationCode }),
+      body: JSON.stringify({ Username: verificationUsername, code: verificationCode }),
     });
 
     const res = await response.json();
@@ -172,7 +174,7 @@ function Login() {
     setShowRegister(false);
   }
 
-  // Handle switching to verify page if user not verified
+  // Handle switching to verify page if user not verified or user clicks "Verify"
   function handleSwitchToVerify() {
     clearAllFields();
     setShowVerification(true);
@@ -180,6 +182,7 @@ function Login() {
     setVerificationSuccess(false);
     setVerificationMessage('');
     setVerificationCode('');
+    // Keep verificationUsername empty for manual entry
   }
 
   return (
@@ -202,6 +205,13 @@ function Login() {
         // Verification Code Form
         <div className="login-container" style={{ padding: '0 10px' }}>
           <h3>Enter Email Verification Code</h3>
+          <input
+            type="text"
+            placeholder="Username"
+            value={verificationUsername}
+            onChange={(e) => setVerificationUsername(e.target.value)}
+            className="login-input"
+          />
           <input
             type="text"
             placeholder="Verification Code"
