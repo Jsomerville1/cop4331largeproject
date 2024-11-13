@@ -411,36 +411,59 @@ app.post('/api/deletemessage', async (req, res) => {
 // ADD RECIPIENT
 // Route: /api/addRecipient
 app.post('/api/addRecipient', async (req, res) => {
-  const { username, recipientName, recipientEmail, messageId } = req.body;
+  const { userId, username, recipientName, recipientEmail, messageId } = req.body;
 
   // Validate required fields
-  if (!username || !recipientName || !recipientEmail || !messageId) {
-    return res.status(400).json({ error: 'All fields (username, recipientName, recipientEmail, messageId) are required.' });
+  if ((!userId && !username) || !recipientName || !recipientEmail || !messageId) {
+    return res.status(400).json({ error: 'At least one of userId or username, along with recipientName, recipientEmail, and messageId, is required.' });
   }
 
   try {
-    // Retrieve the userId from the Users collection based on username
-    const user = await db.collection('Users').findOne({ Username: username });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-    const userId = user.UserId;
-    
-      // Generate a new recipientId by incrementing the highest existing recipientId
-      let newRecipientId = 1; // Default to 1 if no messages exist
-      const lastId = await db.collection('Recipients').find().sort({ recipientId: -1 }).limit(1).toArray();
-      if (lastId.length > 0) {
-        newRecipientId = lastId[0].recipientId + 1;
+    let user;
+
+    if (userId) {
+      // Validate that userId is a number
+      if (typeof userId !== 'number') {
+        return res.status(400).json({ error: 'userId must be a number.' });
       }
-    
+
+      // Retrieve the user based on userId
+      user = await db.collection('Users').findOne({ UserId: userId });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found with the provided userId.' });
+      }
+    } else if (username) {
+      // Retrieve the user based on username
+      user = await db.collection('Users').findOne({ Username: username });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found with the provided username.' });
+      }
+    }
+
+    // If both userId and username are provided, ensure they match
+    if (userId && username) {
+      if (user.UserId !== userId) {
+        return res.status(400).json({ error: 'userId and username do not match.' });
+      }
+    }
+
+    const resolvedUserId = user.UserId;
+
+    // Generate a new recipientId by incrementing the highest existing recipientId
+    let newRecipientId = 1; // Default to 1 if no recipients exist
+    const lastId = await db.collection('Recipients').find().sort({ recipientId: -1 }).limit(1).toArray();
+    if (lastId.length > 0) {
+      newRecipientId = lastId[0].recipientId + 1;
+    }
+
     // Add the new recipient with userId to the Recipients collection
     const newRecipient = {
       recipientId: newRecipientId,  // Generate unique ID for recipient
-      userId,                 // Associate recipient with this user
+      userId: resolvedUserId,       // Associate recipient with this user
       recipientName,
       recipientEmail,
       messageId,
-      createdAt: new Date()    // Optional: track when the recipient was added
+      createdAt: new Date()          // Optional: track when the recipient was added
     };
 
     await db.collection('Recipients').insertOne(newRecipient);
@@ -450,8 +473,8 @@ app.post('/api/addRecipient', async (req, res) => {
     console.error('Error adding recipient:', error);
     res.status(500).json({ error: 'Failed to add recipient' });
   }
-  
 });
+
 
 
 // EDIT RECIPIENT
