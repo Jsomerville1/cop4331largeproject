@@ -1,16 +1,27 @@
 // server.js
 require('dotenv').config();
-
 const { v4: uuidv4 } = require('uuid');
-const sendEmail = require('./sendEmail'); // points to sendEmail function in sendEmail.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cron = require('node-cron');
 const bcrypt = require('bcryptjs');
+const sendEmail = require('./sendEmail'); // points to sendEmail function in sendEmail.js
+const checkUserStatus = require('./checkUserStatus');
+const sendPendingMessages = require('./sendPendingMessages');
+const logger = require('./logger');
+const triggerCronRoute = require('./triggerCron'); // Import the triggerCron route
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+const PORT = process.env.PORT || 5000;
+
+// Object to store last run times
+const cronStatus = {
+  checkUserStatus: null,
+  sendPendingMessages: null,
+};
 
 // Import ObjectId from MongoDB
 const { MongoClient, ObjectId } = require('mongodb');
@@ -19,13 +30,51 @@ const { MongoClient, ObjectId } = require('mongodb');
 const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 let db;
+
 // Connect to MongoDB and start the server
 client.connect()
   .then(() => {
+
     console.log('Connected to MongoDB');
 
+    db = client.db('COP4331'); // Ensure this matches database name exactly
+    global.db = db;
 
-    db = client.db('COP4331'); // Ensure this matches your database name exactly
+    // --------------------------- TASK SCHEDULER ---------------------------
+
+    // Schedule the tasks to run every hour at minute 0
+    cron.schedule('0 * * * *', async () => {
+      const startTime = new Date().toISOString();
+      logger.info(`Scheduled tasks started at ${startTime}`);
+      console.log(`Scheduled tasks started at ${startTime}`);
+
+      try {
+        await checkUserStatus(db);
+        cronStatus.checkUserStatus = new Date();
+
+        await sendPendingMessages(db);
+        cronStatus.sendPendingMessages = new Date();
+
+        const endTime = new Date().toISOString();
+        logger.info(`Scheduled tasks completed at ${endTime}`);
+        console.log(`Scheduled tasks completed at ${endTime}`);
+      } catch (error) {
+        logger.error('Error during scheduled tasks:', error);
+        console.error('Error during scheduled tasks:', error);
+      }
+    });
+    app.use('/triggerCron', triggerCronRoute);
+
+    // Start the server after successful DB connection
+    app.listen(5000, '0.0.0.0', () => {
+      console.log('Server is running on port 5000');
+    });
+
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message);
+    process.exit(1);
+  });
 
 
 // Route: /api/register
@@ -202,15 +251,6 @@ app.post('/api/login', async (req, res) => {
       }
     });
 
-    // Start the server after successful DB connection
-    app.listen(5000, '0.0.0.0', () => {
-      console.log('Server is running on port 5000');
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1);
-  });
 
 //displying recipients and messages
   app.post('/api/recipients', async (req, res) => {
@@ -528,16 +568,16 @@ app.post('/api/deleteRecipient', async (req, res) => {
 
 //CHECK IN USER
 app.post('/api/checkIn', async (req,res) => {
-  const{userId} = req.body;
+  const{UserId} = req.body;
 
   try{
 
     const result = await db.collection('Users').updateOne(
-      {userId: userId},
+      {UserId: UserId},
       {
         $set: {
-          lastCheckIn: new Date(),
-          status: 'Checked In'
+          lastLogin: new Date(),
+          status: 'Active'
         },
         $inc: {frequency: 1}
       },
@@ -583,6 +623,8 @@ app.post('/api/getUserMessages', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 app.post('/api/search', async (req, res) => { 
   const { query } = req.body; // Use req.body for POST requests.

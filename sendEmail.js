@@ -1,5 +1,6 @@
 // sendEmail.js
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 // Configure the transporter
 const transporter = nodemailer.createTransport({
