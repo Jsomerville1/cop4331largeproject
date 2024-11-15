@@ -583,3 +583,20 @@ app.post('/api/getUserMessages', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.post('/api/search', async (req, res) => { 
+  const { query } = req.body; // Use req.body for POST requests.
+
+  try {
+    const users = await db.collection('Users').find({
+      $or: [
+        { Name: { $regex: query, $options: 'i' } },
+        { Email: { $regex: query, $options: 'i' } }
+      ]
+    }).toArray();
+
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
