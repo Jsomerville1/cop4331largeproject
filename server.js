@@ -624,8 +624,6 @@ app.post('/api/getUserMessages', async (req, res) => {
   }
 });
 
-
-
 app.post('/api/search', async (req, res) => { 
   const { userId ,query } = req.body; 
 
