@@ -627,12 +627,14 @@ app.post('/api/getUserMessages', async (req, res) => {
 
 
 app.post('/api/search', async (req, res) => { 
-  const { query } = req.body; // Use req.body for POST requests.
+  const { userId ,query } = req.body; 
 
   try {
     const users = await db.collection('Users').find({
+      UserId: userId,
       $or: [
-        { Name: { $regex: query, $options: 'i' } },
+        { FirstName: { $regex: query, $options: 'i' } },
+        { LastName: { $regex: query, $options: 'i' } },
         { Email: { $regex: query, $options: 'i' } }
       ]
     }).toArray();
