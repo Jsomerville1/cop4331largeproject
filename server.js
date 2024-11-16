@@ -624,3 +624,21 @@ app.post('/api/getUserMessages', async (req, res) => {
   }
 });
 
+app.post('/api/search', async (req, res) => { 
+  const { userId ,query } = req.body; 
+
+  try {
+    const users = await db.collection('Users').find({
+      UserId: userId,
+      $or: [
+        { FirstName: { $regex: query, $options: 'i' } },
+        { LastName: { $regex: query, $options: 'i' } },
+        { Email: { $regex: query, $options: 'i' } }
+      ]
+    }).toArray();
+
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
