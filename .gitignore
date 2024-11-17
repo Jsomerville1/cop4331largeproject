@@ -18,7 +18,7 @@ vite.svg
 
 tsconfig.app.json
 tsconfig.node.json
-
+/frontend/package.json
 vite.config.ts
 package-lock.json
 eslint.config.js
