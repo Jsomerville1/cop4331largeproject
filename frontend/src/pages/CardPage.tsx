@@ -12,7 +12,9 @@ const CardPage = () =>
             <LoggedInName />
             <CheckIn />
             <Recipients />
+            {/* 
             <MessageField />
+            */}
         </div>
     );
 }

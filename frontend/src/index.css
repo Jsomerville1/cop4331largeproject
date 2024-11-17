@@ -1,10 +1,8 @@
-
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -29,6 +27,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #242424;
 }
 
 h1 {
@@ -58,14 +57,14 @@ h1 {
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  background-color: #8a8a8a;
+  background-color: #242424;
 }
 
 .login-container {
-  background-color: #e0e0e050;
+  background-color: rgba(64, 64, 64, 0.8);
   padding: 40px 30px;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   max-width: 350px;
   width: 80%;
   text-align: center;
@@ -74,7 +73,7 @@ h1 {
 .login-title {
   font-size: 1.5em;
   margin-bottom: 15px;
-  color: #333;
+  color: #f0f0f0;
 }
 
 .login-input {
@@ -84,11 +83,13 @@ h1 {
   border: 1px solid #cccccca8;
   border-radius: 5px;
   font-size: 1em;
+  background-color: #333;
+  color: #fff;
   box-sizing: border-box;
 }
 
 .login-input::placeholder {
-  color: #e0e0e0;
+  color: #b0b0b0;
   opacity: 0.7;
 }
 
@@ -113,8 +114,8 @@ h1 {
   margin-bottom: 10px;
   font-size: 1.2em;
   font-weight: bolder;
-  color: rgb(255, 84, 84); /* Default to error color */
-  text-shadow: 0 0 5px rgb(0, 0, 0), 0 0 10px rgb(0, 0, 0); /* Creates an outline effect */
+  color: rgb(255, 84, 84);
+  text-shadow: 0 0 5px rgb(0, 0, 0), 0 0 10px rgb(0, 0, 0);
 }
 
 .login-message.success {
@@ -134,14 +135,14 @@ h1 {
 .check-in-frequency label {
   font-weight: bold;
   margin-bottom: 5px;
-  color: #333;
+  color: #f0f0f0;
 }
 
 .radio-option {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: black;
+  color: #ddd;
 }
 
 .radio-option input[type="radio"] {
@@ -151,17 +152,4 @@ h1 {
 
 .delete-account-button {
   background-color: rgb(158, 10, 10);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #494949;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
