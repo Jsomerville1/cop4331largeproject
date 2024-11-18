@@ -237,48 +237,6 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-    // Route: /api/addcard
-    app.post('/api/addcard', async (req, res) => {
-      const { userId, card } = req.body;
-
-      // Convert userId to ObjectId
-      const userObjectId = new ObjectId(userId);
-
-      const newCard = { Card: card, UserId: userObjectId };
-      let error = '';
-
-      try {
-        await db.collection('Cards').insertOne(newCard);
-        res.status(200).json({ error: '' });
-      } catch (e) {
-        error = e.toString();
-        res.status(500).json({ error: error });
-      }
-    });
-
-    // Route: /api/searchcards
-    app.post('/api/searchcards', async (req, res) => {
-      const { userId, search } = req.body;
-
-      // Convert userId to ObjectId
-      const userObjectId = new ObjectId(userId);
-
-      const _search = search.trim();
-
-      try {
-        const results = await db.collection('Cards').find({
-          UserId: userObjectId,
-          Card: { $regex: '^' + _search, $options: 'i' },
-        }).toArray();
-
-        const _ret = results.map(result => result.Card);
-
-        res.status(200).json({ results: _ret, error: '' });
-      } catch (e) {
-        res.status(500).json({ results: [], error: e.toString() });
-      }
-    });
-
 
 //displying recipients and messages
   app.post('/api/recipients', async (req, res) => {
@@ -474,8 +432,6 @@ app.post('/api/deletemessage', async (req, res) => {
   }
 });
 
-
-
 // ADD RECIPIENT
 // Route: /api/addRecipient
 app.post('/api/addRecipient', async (req, res) => {
@@ -542,8 +498,6 @@ app.post('/api/addRecipient', async (req, res) => {
     res.status(500).json({ error: 'Failed to add recipient' });
   }
 });
-
-
 
 // EDIT RECIPIENT
 app.post('/api/editRecipient', async (req, res) => {
@@ -652,26 +606,6 @@ app.post('/api/getUserMessages', async (req, res) => {
   }
 });
 
-app.post('/api/search', async (req, res) => { 
-  const { userId ,query } = req.body; 
-
-  try {
-    const users = await db.collection('Users').find({
-      UserId: userId,
-      $or: [
-        { FirstName: { $regex: query, $options: 'i' } },
-        { LastName: { $regex: query, $options: 'i' } },
-        { Email: { $regex: query, $options: 'i' } }
-      ]
-    }).toArray();
-
-    res.status(200).json({ users });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
 
 // UPLOAD PDF
 app.post('/api/uploadPdf', upload.single('pdfFile'), async (req, res) => {
@@ -687,13 +621,11 @@ app.post('/api/uploadPdf', upload.single('pdfFile'), async (req, res) => {
     return res.status(400).json({ error: 'Invalid recipient email format.' });
   }
 
-
   const userIdNumber = Number(userId);
   if (isNaN(userIdNumber)) {
     return res.status(400).json({ error: 'userId must be a number.' });
   }
    
-  
     try {
       // Generate a new messageId by incrementing the highest existing messageId
       let newDocumentId = 1; // Default to 1 if no messages exist
@@ -728,7 +660,7 @@ app.post('/api/uploadPdf', upload.single('pdfFile'), async (req, res) => {
   }
 });
 
-// Endpoint to get user documents
+// RETREIVE USERS PDF UPLOADS
 app.post('/api/getUserDocuments', async (req, res) => {
   const { userId } = req.body;
 
@@ -745,7 +677,7 @@ app.post('/api/getUserDocuments', async (req, res) => {
   }
 });
 
-// Endpoint to delete a document
+// DELETE A PDF
 app.post('/api/deleteDocument', async (req, res) => {
   const { documentId } = req.body;
 
@@ -779,3 +711,154 @@ app.post('/api/deleteDocument', async (req, res) => {
   }
 });
 
+// UPLOAD PDF
+app.post('/api/uploadPdf', upload.single('pdfFile'), async (req, res) => {
+  const { userId, recipientEmail, recipientName, title } = req.body;
+
+  if (!req.file || !userId || !recipientEmail || !recipientName || !title) {
+    return res.status(400).json({ error: 'userId, recipientEmail, recipientName, title, and pdfFile are required.' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(recipientEmail)) {
+    return res.status(400).json({ error: 'Invalid recipient email format.' });
+  }
+
+  const userIdNumber = Number(userId);
+  if (isNaN(userIdNumber)) {
+    return res.status(400).json({ error: 'userId must be a number.' });
+  }
+   
+    try {
+      // Generate a new messageId by incrementing the highest existing messageId
+      let newDocumentId = 1; // Default to 1 if no messages exist
+      const lastDocument = await db.collection('Documents').find().sort({ documentId: -1 }).limit(1).toArray();
+      if (lastDocument.length > 0) {
+        newDocumentId = lastDocument[0].documentId + 1;
+      }
+
+    const newDocument = {
+      documentId: newDocumentId,
+      userId: Number(userId),
+      recipientEmail,
+      recipientName,
+      title,
+      filePath: req.file.path,
+      isSent: false,
+      createdAt: new Date(),
+    };
+
+    await db.collection('Documents').insertOne(newDocument);
+
+    res.status(201).json({ message: 'PDF uploaded successfully', documentId: newDocumentId });
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+
+    // Handle duplicate key error
+    if (error.code === 11000) { // MongoDB duplicate key error code
+      return res.status(500).json({ error: 'Duplicate documentId. Please try again.' });
+    }
+
+    res.status(500).json({ error: 'Failed to upload PDF' });
+  }
+});
+
+
+
+// DELETE PDF
+app.post('/api/deleteDocument', async (req, res) => {
+  const { documentId } = req.body;
+
+  if (!documentId) {
+    return res.status(400).json({ error: 'documentId is required.' });
+  }
+
+  try {
+    const document = await db.collection('Documents').findOne({ documentId: Number(documentId) });
+
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found.' });
+    }
+
+    // Delete the file from the filesystem
+    const fs = require('fs');
+    fs.unlink(document.filePath, (err) => {
+      if (err) {
+        console.error('Error deleting file:', err);
+        // Proceed to delete from DB even if file deletion fails
+      }
+    });
+
+    // Delete the document from MongoDB
+    await db.collection('Documents').deleteOne({ documentId: Number(documentId) });
+
+    res.status(200).json({ message: 'Document deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    res.status(500).json({ error: 'Failed to delete document.' });
+  }
+});
+
+
+
+
+// EDIT USER
+app.post('/api/editUser', async (req,res) => {
+
+  const {userId, currentPassword, newEmail, newPassword} = req.body;
+
+  try{
+    const user = await db.collection('Users').findOne({UserId: userId });
+
+    if(!user){
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(currentPassword, user.Password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const updates = {};
+    if (newEmail) updates.Email = newEmail;
+    if (newPassword) updates.Password = await bcrypt.hash(newPassword, 10);
+
+    // Update the user
+    const result = await db.collection('Users').updateOne(
+      { UserId: userId },
+      { $set: updates }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: 'User details updated successfully' });
+    } else {
+      res.status(400).json({ error: 'No changes were made' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+  });
+
+// SEARCH RECIPIENTS
+  app.post('/api/search', async (req, res) => { 
+    const { userId ,query } = req.body; 
+  
+    try {
+      const users = await db.collection('Users').find({
+        UserId: userId,
+        $or: [
+          { FirstName: { $regex: query, $options: 'i' } },
+          { LastName: { $regex: query, $options: 'i' } },
+          { Email: { $regex: query, $options: 'i' } }
+        ]
+      }).toArray();
+  
+      res.status(200).json({ users });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
