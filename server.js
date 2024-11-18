@@ -209,49 +209,6 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-    // Route: /api/addcard
-    app.post('/api/addcard', async (req, res) => {
-      const { userId, card } = req.body;
-
-      // Convert userId to ObjectId
-      const userObjectId = new ObjectId(userId);
-
-      const newCard = { Card: card, UserId: userObjectId };
-      let error = '';
-
-      try {
-        await db.collection('Cards').insertOne(newCard);
-        res.status(200).json({ error: '' });
-      } catch (e) {
-        error = e.toString();
-        res.status(500).json({ error: error });
-      }
-    });
-
-    // Route: /api/searchcards
-    app.post('/api/searchcards', async (req, res) => {
-      const { userId, search } = req.body;
-
-      // Convert userId to ObjectId
-      const userObjectId = new ObjectId(userId);
-
-      const _search = search.trim();
-
-      try {
-        const results = await db.collection('Cards').find({
-          UserId: userObjectId,
-          Card: { $regex: '^' + _search, $options: 'i' },
-        }).toArray();
-
-        const _ret = results.map(result => result.Card);
-
-        res.status(200).json({ results: _ret, error: '' });
-      } catch (e) {
-        res.status(500).json({ results: [], error: e.toString() });
-      }
-    });
-
-
 //displying recipients and messages
   app.post('/api/recipients', async (req, res) => {
     const { userId } = req.body;
@@ -642,3 +599,41 @@ app.post('/api/search', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post('/api/editUser', async (req,res) => {
+
+  const {userId, currentPassword, newEmail, newPassword} = req.body;
+
+  try{
+    const user = await db.collection('Users').findOne({UserId: userId });
+
+    if(!user){
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(currentPassword, user.Password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const updates = {};
+    if (newEmail) updates.Email = newEmail;
+    if (newPassword) updates.Password = await bcrypt.hash(newPassword, 10);
+
+    // Update the user
+    const result = await db.collection('Users').updateOne(
+      { UserId: userId },
+      { $set: updates }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: 'User details updated successfully' });
+    } else {
+      res.status(400).json({ error: 'No changes were made' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+  });
