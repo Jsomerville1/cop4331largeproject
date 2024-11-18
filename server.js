@@ -6,6 +6,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const cron = require('node-cron');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const sendEmail = require('./sendEmail'); // points to sendEmail function in sendEmail.js
 const checkUserStatus = require('./checkUserStatus');
 const sendPendingMessages = require('./sendPendingMessages');
@@ -17,11 +20,37 @@ app.use(cors());
 app.use(bodyParser.json());
 const PORT = process.env.PORT || 5000;
 
+
+
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); 
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF files are allowed.'), false);
+  }
+};
+
 // Object to store last run times
 const cronStatus = {
   checkUserStatus: null,
   sendPendingMessages: null,
 };
+
+
+
 
 // Import ObjectId from MongoDB
 const { MongoClient, ObjectId } = require('mongodb');
@@ -64,7 +93,6 @@ client.connect()
       }
     });
     app.use('/triggerCron', triggerCronRoute);
-
     // Start the server after successful DB connection
     app.listen(5000, '0.0.0.0', () => {
       console.log('Server is running on port 5000');
@@ -642,3 +670,112 @@ app.post('/api/search', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+
+// UPLOAD PDF
+app.post('/api/uploadPdf', upload.single('pdfFile'), async (req, res) => {
+  const { userId, recipientEmail, recipientName, title } = req.body;
+
+  if (!req.file || !userId || !recipientEmail || !recipientName || !title) {
+    return res.status(400).json({ error: 'userId, recipientEmail, recipientName, title, and pdfFile are required.' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(recipientEmail)) {
+    return res.status(400).json({ error: 'Invalid recipient email format.' });
+  }
+
+
+  const userIdNumber = Number(userId);
+  if (isNaN(userIdNumber)) {
+    return res.status(400).json({ error: 'userId must be a number.' });
+  }
+   
+  
+    try {
+      // Generate a new messageId by incrementing the highest existing messageId
+      let newDocumentId = 1; // Default to 1 if no messages exist
+      const lastDocument = await db.collection('Documents').find().sort({ documentId: -1 }).limit(1).toArray();
+      if (lastDocument.length > 0) {
+        newDocumentId = lastDocument[0].documentId + 1;
+      }
+
+    const newDocument = {
+      documentId: newDocumentId,
+      userId: Number(userId),
+      recipientEmail,
+      recipientName,
+      title,
+      filePath: req.file.path,
+      isSent: false,
+      createdAt: new Date(),
+    };
+
+    await db.collection('Documents').insertOne(newDocument);
+
+    res.status(201).json({ message: 'PDF uploaded successfully', documentId: newDocumentId });
+  } catch (error) {
+    console.error('Error uploading PDF:', error);
+
+    // Handle duplicate key error
+    if (error.code === 11000) { // MongoDB duplicate key error code
+      return res.status(500).json({ error: 'Duplicate documentId. Please try again.' });
+    }
+
+    res.status(500).json({ error: 'Failed to upload PDF' });
+  }
+});
+
+// Endpoint to get user documents
+app.post('/api/getUserDocuments', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required.' });
+  }
+
+  try {
+    const documents = await db.collection('Documents').find({ userId: Number(userId) }).toArray();
+    res.status(200).json({ documents });
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    res.status(500).json({ error: 'Failed to fetch documents' });
+  }
+});
+
+// Endpoint to delete a document
+app.post('/api/deleteDocument', async (req, res) => {
+  const { documentId } = req.body;
+
+  if (!documentId) {
+    return res.status(400).json({ error: 'documentId is required.' });
+  }
+
+  try {
+    const document = await db.collection('Documents').findOne({ documentId: Number(documentId) });
+
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found.' });
+    }
+
+    // Delete the file from the filesystem
+    const fs = require('fs');
+    fs.unlink(document.filePath, (err) => {
+      if (err) {
+        console.error('Error deleting file:', err);
+        // Proceed to delete from DB even if file deletion fails
+      }
+    });
+
+    // Delete the document from MongoDB
+    await db.collection('Documents').deleteOne({ documentId: Number(documentId) });
+
+    res.status(200).json({ message: 'Document deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    res.status(500).json({ error: 'Failed to delete document.' });
+  }
+});
+

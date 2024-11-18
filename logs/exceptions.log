@@ -134,3 +134,18 @@ Require stack:
     at Module.load (node:internal/modules/cjs/loader:1208:32)
     at Module._load (node:internal/modules/cjs/loader:1024:12)
     at Module.require (node:internal/modules/cjs/loader:1233:19)
+2024-11-17 18:10:10 [error]: Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1898:16)
+    at listenInCluster (node:net:1946:12)
+    at doListen (node:net:2116:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2024-11-17 18:11:18 [error]: Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1898:16)
+    at listenInCluster (node:net:1946:12)
+    at doListen (node:net:2116:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2024-11-17 18:11:37 [error]: Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1898:16)
+    at listenInCluster (node:net:1946:12)
+    at doListen (node:net:2116:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
