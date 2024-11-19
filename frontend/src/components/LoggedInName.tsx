@@ -1,32 +1,19 @@
-// src/components/LoggedInName.tsx
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function LoggedInName() {
   const [message, setMessage] = useState('');
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  // Retrieve user data from localStorage when the component mounts
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user_data') || 'null');
-    if (storedUser) {
-      setUser(storedUser);
-    } else {
-      setMessage('User data not found. Please log in again.');
-      navigate('/'); // Redirect to login page
-    }
-  }, [navigate]);
+  // Retrieve user data from localStorage
+  const user = JSON.parse(localStorage.getItem('user_data') || '{}');
 
-  // Function to build API path
   function buildPath(route: string): string {
     return import.meta.env.MODE === 'development'
       ? 'http://localhost:5000/' + route
       : '/' + route;
   }
 
-  // Function to delete the user's account
   async function deleteAccount() {
     if (!user || !user.id) {
       setMessage('User not found. Please log in again.');
@@ -40,7 +27,7 @@ function LoggedInName() {
       const response = await fetch(buildPath('api/deleteUsers'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({ userId: user.id }), // Correct payload
       });
 
       const res = await response.json();
@@ -49,54 +36,58 @@ function LoggedInName() {
       } else {
         localStorage.removeItem('user_data'); // Clear user data
         setMessage('Account deleted successfully.');
-        navigate('/');
+        navigate('/')
       }
     } catch (error) {
       setMessage('Failed to delete account. Please try again later.');
     }
   }
 
-  // Function to log out the user
   function logout() {
     localStorage.removeItem('user_data'); // Clear user data
     setMessage('You have been logged out.');
-    navigate('/');
+    navigate('/')
   }
-
-  // Format date fields
-  const formattedCreatedAt = user && user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A';
-  const formattedLastLogin = user && user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A';
 
   return (
     <div className="logged-in-name-container">
-      {user ? (
-        <>
-          <h2>Welcome, {user.firstName} {user.lastName}</h2>
+      <h2>Welcome, {user.firstName} {user.lastName}</h2>
+      
+      <button
+      onClick={logout}
+      className="logout-button"
+      style={{
+        backgroundColor: '#575757',
+        color: 'white',
+        padding: '10px 20px',
+        margin: '10px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontSize: '16px',
+      }}
+    >
+      Logout
+    </button>
 
-          <p><strong>User ID:</strong> {user.id || 'N/A'}</p>
-          <p><strong>First Name:</strong> {user.firstName || 'N/A'}</p>
-          <p><strong>Last Name:</strong> {user.lastName || 'N/A'}</p>
-          <p><strong>Username:</strong> {user.username || 'N/A'}</p>
-          <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-          <p><strong>Check-In Frequency:</strong> {user.checkInFreq ? `${user.checkInFreq} seconds` : 'N/A'}</p>
-          <p><strong>Verified:</strong> {user.verified ? 'Yes' : 'No'}</p>
-          <p><strong>Deceased:</strong> {user.deceased ? 'Yes' : 'No'}</p>
-          <p><strong>Account Created At:</strong> {formattedCreatedAt}</p>
-          <p><strong>Last Login:</strong> {formattedLastLogin}</p>
+    <button
+      onClick={deleteAccount}
+      className="delete-account-button"
+      style={{
+        backgroundColor: '#f44336',
+        color: 'white',
+        padding: '10px 20px',
+        margin: '10px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontSize: '16px',
+      }}
+    >
+      Delete Account
+    </button>
 
-          <button onClick={logout} className="logout-button">
-            Logout
-          </button>
-
-          <button onClick={deleteAccount} className="delete-account-button">
-            Delete Account
-          </button>
-
-          {message && <div className="message">{message}</div>}
-        </>
-      ) : (
-        <p>Loading user data...</p>
-      )}
+      {message && <div className="message">{message}</div>}
     </div>
   );
 }
