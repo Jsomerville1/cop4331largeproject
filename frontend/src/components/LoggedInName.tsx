@@ -53,9 +53,40 @@ function LoggedInName() {
     <div className="logged-in-name-container">
       <h2>Welcome, {user.firstName} {user.lastName}</h2>
       
-      <button
+    <button
+      onClick={() => navigate('/afterwords/create-message')}
+      style={{
+        backgroundColor: '#316b39',
+        color: 'white',
+        padding: '10px 20px',
+        margin: '10px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontSize: '16px',
+      }}
+    >
+      Create Message
+    </button>
+
+    <button
+      onClick={() => navigate('/afterwords/view-messages')}
+      style={{
+        backgroundColor: '#807900',
+        color: 'white',
+        padding: '10px 20px',
+        margin: '10px',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontSize: '16px',
+      }}
+    >
+      View Messages
+    </button>
+
+    <button
       onClick={logout}
-      className="logout-button"
       style={{
         backgroundColor: '#575757',
         color: 'white',
@@ -72,9 +103,8 @@ function LoggedInName() {
 
     <button
       onClick={deleteAccount}
-      className="delete-account-button"
       style={{
-        backgroundColor: '#f44336',
+        backgroundColor: '#a61a12',
         color: 'white',
         padding: '10px 20px',
         margin: '10px',

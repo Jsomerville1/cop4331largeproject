@@ -13,7 +13,8 @@
     "nodejs": "^0.0.0",
     "nodemailer": "^6.9.16",
     "path": "^0.12.7",
-    "uuid": "^11.0.2",
+    "react-bootstrap": "^2.10.5",
+    "uuid": "^11.0.3",
     "winston": "^3.17.0"
   },
   "devDependencies": {

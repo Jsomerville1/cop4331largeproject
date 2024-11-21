@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Table, InputGroup, FormControl } from 'react-bootstrap';
+import './CreateMessage.css';
 
 function CreateMessage() {
     function buildPath(route: string): string {
@@ -21,8 +22,8 @@ function CreateMessage() {
     const userId = user.id;
 
     async function addMessage(event: React.FormEvent): Promise<void> {
-        event.preventDefault(); //prevents page refresh from form submit
-        
+        event.preventDefault();
+
         if (!userId || !content) {
             setErrorMessage("User ID and message content are required.");
             return;
@@ -43,7 +44,7 @@ function CreateMessage() {
                 setErrorMessage(res.error);
             } else {
                 setMessageId(res.messageId);
-                setErrorMessage(null); // Clear any previous error
+                setErrorMessage(null);
                 setSuccessMessage("Message added successfully!");
             }
         } catch (error: any) {
@@ -56,23 +57,23 @@ function CreateMessage() {
             const { name: recipientName, email: recipientEmail } = recipient;
             const recipientData = { userId, recipientName, recipientEmail, messageId };
             const requestBody = JSON.stringify(recipientData);
-      
+
             try {
-              const response = await fetch(buildPath('api/addRecipient'), {
-                method: 'POST',
-                body: requestBody,
-                headers: { 'Content-Type': 'application/json' }
-              });
-      
-              const res = await response.json();
-              if (res.error) {
-                setErrorMessage(res.error);
-                return;
-              } else {
-                setSuccessMessage("Recipients added successfully!");
-              }
+                const response = await fetch(buildPath('api/addRecipient'), {
+                    method: 'POST',
+                    body: requestBody,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const res = await response.json();
+                if (res.error) {
+                    setErrorMessage(res.error);
+                    return;
+                } else {
+                    setSuccessMessage("Recipients added successfully!");
+                }
             } catch (error: any) {
-              alert(error.toString());
+                alert(error.toString());
             }
         }
     }
@@ -80,7 +81,7 @@ function CreateMessage() {
     const handleAddRecipient = () => {
         setRecipients([...recipients, { name: '', email: '' }]);
     };
-    
+
     const handleClearRecipients = () => {
         setRecipients([]);
     };
@@ -107,22 +108,28 @@ function CreateMessage() {
 
     return (
         <div>
+            <Button
+                variant="secondary"
+                className="redirect-button"
+                onClick={() => navigate('/afterwords')}
+            >
+                Return to Check In
+            </Button>
             <h2>Create a New Message</h2>
+            <p>Be sure to add Recipients before submitting!</p>
             <form onSubmit={handleSubmit}>
-                <div>
-                <label>Message Content:</label>
+                <label >Message Content:</label>
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                 />
-                </div>
-                <button type="submit">Add Message and Recipients</button>
+                <button type="submit">Add Message with Recipients</button>
             </form>
 
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-            {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
+            {successMessage && <p className="success-message">{successMessage}</p>}
 
-            <h3>Recipients</h3>
+            <h2>Message Recipients</h2>
             <div className="d-flex mb-2">
                 <Button variant="primary" onClick={handleAddRecipient}>
                     Add Recipient
@@ -132,8 +139,8 @@ function CreateMessage() {
                 </Button>
             </div>
 
-            <Table bordered>
-                <thead>
+            <Table bordered className="custom-table">
+                <thead className="custom-thead">
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
@@ -141,35 +148,35 @@ function CreateMessage() {
                     </tr>
                 </thead>
                 <tbody>
-                {recipients.map((recipient, index) => (
-                    <tr key={index}>
-                        <td>
-                            <InputGroup>
-                                <FormControl
-                                    type="text"
-                                    placeholder="Recipient Name"
-                                    value={recipient.name}
-                                    onChange={(e) => handleRecipientChange(index, 'name', e.target.value)}
-                                />
-                            </InputGroup>
-                        </td>
-                        <td>
-                            <InputGroup>
-                                <FormControl
-                                    type="email"
-                                    placeholder="Recipient Email"
-                                    value={recipient.email}
-                                    onChange={(e) => handleRecipientChange(index, 'email', e.target.value)}
-                                />
-                            </InputGroup>
-                        </td>
-                        <td>
-                            <Button variant="danger" onClick={() => handleRemoveRecipient(index)}>
-                                Delete
-                            </Button>
-                        </td>
-                    </tr>
-                ))}
+                    {recipients.map((recipient, index) => (
+                        <tr key={index}>
+                            <td>
+                                <InputGroup>
+                                    <FormControl
+                                        type="text"
+                                        placeholder="Recipient Name"
+                                        value={recipient.name}
+                                        onChange={(e) => handleRecipientChange(index, 'name', e.target.value)}
+                                    />
+                                </InputGroup>
+                            </td>
+                            <td>
+                                <InputGroup>
+                                    <FormControl
+                                        type="email"
+                                        placeholder="Recipient Email"
+                                        value={recipient.email}
+                                        onChange={(e) => handleRecipientChange(index, 'email', e.target.value)}
+                                    />
+                                </InputGroup>
+                            </td>
+                            <td>
+                                <Button variant="danger" onClick={() => handleRemoveRecipient(index)}>
+                                    Remove
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </Table>
         </div>
