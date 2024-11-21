@@ -146,7 +146,7 @@ label {
     background-color: #4b4b4b;
     color: #ffffff;
     padding: 6px;
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 .custom-table input[type="text"]::placeholder,
