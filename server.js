@@ -14,6 +14,8 @@ const checkUserStatus = require('./checkUserStatus');
 const sendPendingMessages = require('./sendPendingMessages');
 const logger = require('./logger');
 const triggerCronRoute = require('./triggerCron'); // Import the triggerCron route
+const pwRoutes = require('./pw');
+
 
 const app = express();
 app.use(cors());
@@ -93,6 +95,7 @@ client.connect()
       }
     });
     app.use('/triggerCron', triggerCronRoute);
+    app.use('/pw', pwRoutes); // Use pw.js routes under /pw
     // Start the server after successful DB connection
     app.listen(5000, '0.0.0.0', () => {
       console.log('Server is running on port 5000');
@@ -861,4 +864,5 @@ app.post('/api/editUser', async (req,res) => {
       res.status(500).json({ error: error.message });
     }
   });
+  
   
