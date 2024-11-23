@@ -855,24 +855,44 @@ app.post('/api/editUser', async (req,res) => {
 
   });
 
+// Function to Escape Regex Special Characters
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escapes special characters
+}
+
 // SEARCH RECIPIENTS
-  app.post('/api/search', async (req, res) => { 
-    const { userId ,query } = req.body; 
+app.post('/api/search', async (req, res) => { 
+  const { userId, query } = req.body; 
   
-    try {
-      const users = await db.collection('Users').find({
-        UserId: userId,
-        $or: [
-          { FirstName: { $regex: query, $options: 'i' } },
-          { LastName: { $regex: query, $options: 'i' } },
-          { Email: { $regex: query, $options: 'i' } }
-        ]
-      }).toArray();
-  
-      res.status(200).json({ users });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
-  
+  console.log('Search Request Received:', { userId, query }); // Logging
+
+  // Input Validation
+  if (userId === undefined || userId === null || typeof userId !== 'number') {
+    return res.status(400).json({ error: 'A valid userId (number) is required.' });
+  }
+
+  if (!query || typeof query !== 'string' || query.trim() === '') {
+    return res.status(400).json({ error: 'A valid search query (non-empty string) is required.' });
+  }
+
+  try {
+    const filter = {
+      userId: userId,
+      $or: [
+        { recipientName: { $regex: `.*${escapeRegex(query)}.*`, $options: 'i' } }, // search by recipient name
+        { Email: { $regex: `.*${escapeRegex(query)}.*`, $options: 'i' } } // search by email
+      ]
+    };
+
+    console.log('MongoDB Query Filter:', filter); // Logging
+
+    const recipients = await db.collection('Recipients').find(filter).toArray();
+
+    console.log('Search Results:', recipients); // Logging
+
+    res.status(200).json({ recipients });
+  } catch (error) {
+    console.error('Error searching recipients:', error);
+    res.status(500).json({ error: 'Failed to search recipients.' });
+  }
+});
