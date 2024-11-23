@@ -506,14 +506,24 @@ app.post('/api/addRecipient', async (req, res) => {
 app.post('/api/editRecipient', async (req, res) => {
   const { recipientId, messageId, recipientName, recipientEmail } = req.body;
 
-  if (!recipientId || !messageId || !recipientName || !recipientEmail) {
-    return res.status(400).json({ error: 'All fields (recipientId, messageId, recipientName, recipientEmail) are required.' });
+  if (!recipientId || !recipientName || !recipientEmail) {
+    return res.status(400).json({ error: 'recipientId, recipientName, and recipientEmail are required.' });
   }
 
   try {
+    const filter = { recipientId: Number(recipientId) };
+    if (messageId) {
+      filter.messageId = Number(messageId);
+    }
+
+    const updateFields = { recipientName, recipientEmail };
+    if (messageId) {
+      updateFields.messageId = Number(messageId);
+    }
+
     const result = await db.collection('Recipients').updateOne(
-      { recipientId: Number(recipientId), messageId: Number(messageId) },
-      { $set: { recipientName: recipientName, recipientEmail: recipientEmail } }
+      filter,
+      { $set: updateFields }
     );
 
     if (result.matchedCount === 0) {
