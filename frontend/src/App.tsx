@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import CardPage from './pages/CardPage';
 import CreateMessagePage from './pages/CreateMessagePage';
 import ViewMessagesPage from './pages/ViewMessagesPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/afterwords" element={<CardPage />} />
         <Route path="/afterwords/create-message" element={<CreateMessagePage />} />
         <Route path="/afterwords/view-messages" element={<ViewMessagesPage />} />
+        <Route path="/afterwords/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>
       );
