@@ -14,45 +14,26 @@ function LoggedInName() {
       : '/' + route;
   }
 
-  async function deleteAccount() {
-    if (!user || !user.id) {
-      setMessage('User not found. Please log in again.');
-      return;
-    }
-
-    const confirmDelete = window.confirm('Are you sure you want to delete your account?');
-    if (!confirmDelete) return;
-
-    try {
-      const response = await fetch(buildPath('api/deleteUsers'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }), // Correct payload
-      });
-
-      const res = await response.json();
-      if (res.error) {
-        setMessage(res.error);
-      } else {
-        localStorage.removeItem('user_data'); // Clear user data
-        setMessage('Account deleted successfully.');
-        navigate('/')
-      }
-    } catch (error) {
-      setMessage('Failed to delete account. Please try again later.');
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem('user_data'); // Clear user data
-    setMessage('You have been logged out.');
-    navigate('/')
-  }
-
   return (
     <div className="logged-in-name-container">
       <h2>Welcome, {user.firstName} {user.lastName}</h2>
       
+      <button
+        onClick={() => navigate('/afterwords/view-messages')}
+        style={{
+          backgroundColor: '#575757',
+          color: 'white',
+          padding: '10px 20px',
+          margin: '10px',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          fontSize: '16px',
+        }}
+      >
+        View Messages
+      </button>
+
     <button
       onClick={() => navigate('/afterwords/create-message')}
       style={{
@@ -69,24 +50,9 @@ function LoggedInName() {
       Create Message
     </button>
 
-    <button
-      onClick={() => navigate('/afterwords/view-messages')}
-      style={{
-        backgroundColor: '#807900',
-        color: 'white',
-        padding: '10px 20px',
-        margin: '10px',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        fontSize: '16px',
-      }}
-    >
-      View Messages
-    </button>
 
     <button
-      onClick={logout}
+      onClick={() => navigate('/afterwords/settings')}
       style={{
         backgroundColor: '#575757',
         color: 'white',
@@ -98,23 +64,7 @@ function LoggedInName() {
         fontSize: '16px',
       }}
     >
-      Logout
-    </button>
-
-    <button
-      onClick={deleteAccount}
-      style={{
-        backgroundColor: '#a61a12',
-        color: 'white',
-        padding: '10px 20px',
-        margin: '10px',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        fontSize: '16px',
-      }}
-    >
-      Delete Account
+      Settings
     </button>
 
       {message && <div className="message">{message}</div>}

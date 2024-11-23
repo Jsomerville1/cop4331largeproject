@@ -7,7 +7,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "fs": "^0.0.1-security",
-    "mongodb": "^6.10.0",
+    "mongodb": "^6.11.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "nodejs": "^0.0.0",
