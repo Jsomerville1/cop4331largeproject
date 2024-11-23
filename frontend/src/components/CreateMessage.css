@@ -1,4 +1,5 @@
 /* CreateMessage.css */
+
 h2, h3, h5 {
     text-align: center;
     margin-bottom: 20px;
@@ -42,10 +43,11 @@ textarea {
 
 textarea:focus {
     outline: none;
-    border-color: #646cff;
+    border-color: #585fdd;
 }
 
-button {
+/* Updated Button Styles */
+.btn {
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
@@ -54,36 +56,47 @@ button {
     transition: all 0.3s ease;
 }
 
+.btn-primary,
 button[type="submit"] {
-    background-color: #4caf50;
+    background-color: #6e71b3;
     color: white;
 }
 
+.btn-primary:hover,
 button[type="submit"]:hover {
-    background-color: #45a049;
+    background-color: #585fdd;
+}
+
+.btn-secondary {
+    background-color: #6e71b3;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #8a8caf;
+}
+
+.btn-info {
+    background-color: #6e71b3; /* Light blue color */
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #878bd1;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
 }
 
 .d-flex {
     justify-content: center;
     margin-bottom: 20px;
-}
-
-button.variant-primary {
-    background-color: #646cff;
-    color: white;
-}
-
-button.variant-primary:hover {
-    background-color: #535bf2;
-}
-
-button.variant-danger {
-    background-color: #e74c3c;
-    color: white;
-}
-
-button.variant-danger:hover {
-    background-color: #c0392b;
 }
 
 table {
@@ -118,7 +131,7 @@ table th, table td {
 
 label {
     color: white;
-  }
+}
 
 .custom-table {
     background-color: #414141;
@@ -151,6 +164,102 @@ label {
 
 .custom-table input[type="text"]::placeholder,
 .custom-table input[type="email"]::placeholder {
+    color: #ffffff;
+    opacity: 0.7;
+}
+
+.message-card {
+    background-color: #2c2c2c; /* Set to grey */
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    color: #F8F8FF;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.message-card:hover {
+    background-color: #3a3a3a; /* Slightly lighter grey on hover */
+}
+
+.message-summary p {
+    margin: 0;
+    color: #F8F8FF;
+}
+
+.message-details {
+    margin-top: 15px;
+}
+
+.message-details h5 {
+    text-align: left;
+    margin-bottom: 10px;
+    color: #F8F8FF;
+}
+
+.message-details p {
+    color: #F8F8FF;
+}
+
+/* Adjust the background color of the table */
+.custom-table {
+    background-color: #2c2c2c;
+}
+
+.custom-table th {
+    color: #F8F8FF;
+    background-color: #414141;
+}
+
+.custom-table td {
+    background-color: #4b4b4b;
+    color: #ffffff;
+}
+
+.custom-table th,
+.custom-table td {
+    padding: 10px;
+    border: 1px solid #202020;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Styling */
+.custom-modal .modal-content {
+    background-color: #2c2c2c !important; /* Matches page background */
+    color: #F8F8FF; /* White text */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal .modal-header {
+    border-bottom: 1px solid #414141;
+}
+
+.custom-modal .modal-footer {
+    border-top: 1px solid #414141;
+}
+
+.custom-modal .btn-secondary {
+    background-color: #6e71b3;
+    border: none;
+}
+
+.custom-modal .btn-primary {
+    background-color: #585fdd;
+    border: none;
+}
+
+.custom-modal .btn-secondary:hover,
+.custom-modal .btn-primary:hover {
+    background-color: #8a8caf; /* Slightly lighter color on hover */
+}
+
+.custom-modal input {
+    background-color: #4b4b4b;
+    color: #ffffff;
+    border: 1px solid #414141;
+}
+
+.custom-modal input::placeholder {
     color: #ffffff;
     opacity: 0.7;
 }
