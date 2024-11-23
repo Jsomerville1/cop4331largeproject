@@ -1,8 +1,10 @@
 // src/components/Login.tsx
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import gravestoneImage from '../assets/Gravestone.png';
 
 function Login() {
+  // Function to build API path
   function buildPath(route: string): string {
     const isDevelopment = process.env.NODE_ENV === "development";
     return isDevelopment ? `http://localhost:5000/${route}` : `/${route}`;
@@ -24,6 +26,7 @@ function Login() {
 
   // Verification fields
   const [showVerification, setShowVerification] = useState(false);
+  const [verificationUsername, setVerificationUsername] = useState(''); // New state variable
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationMessage, setVerificationMessage] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
@@ -39,7 +42,7 @@ function Login() {
     setRegisterMessage('');
   }
 
-  // Function to clear all fields
+  // Clear all fields
   function clearAllFields() {
     // Clear login fields
     setLoginName('');
@@ -47,6 +50,7 @@ function Login() {
     // Clear registration fields
     clearRegistrationFields();
     // Clear verification fields
+    setVerificationUsername('');
     setVerificationCode('');
     setVerificationMessage('');
     setVerificationSuccess(false);
@@ -63,22 +67,37 @@ function Login() {
       const response = await fetch(buildPath('api/login'), {
         method: 'POST',
         body: js,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const res = await response.json();
+      console.log('API Response:', res); // Debugging
 
       if (res.error) {
         setMessage(res.error);
-      } else if (res.Verified === false) {
+      } else if (res.verified === false) {
         setMessage('Please verify your account');
         setShowVerification(true); // Show verification form
-        setRegisterUsername(loginName); // Set username for verification
+        setVerificationUsername(loginName); // Set username for verification
       } else {
-        const user = { firstName: res.firstName, lastName: res.lastName, id: res.id };
+        // Store all user data in localStorage
+        const user = {
+          id: res.id,
+          firstName: res.firstName,
+          lastName: res.lastName,
+          username: res.username,
+          email: res.email,
+          checkInFreq: res.checkInFreq,
+          verified: res.verified,
+          deceased: res.deceased,
+          createdAt: res.createdAt,
+          lastLogin: res.lastLogin,
+        };
         localStorage.setItem('user_data', JSON.stringify(user));
+        console.log('Stored user data:', user); // Debugging
+
         setMessage('');
-        window.location.href = '/cards';
+        window.location.href = '/afterwords';
       }
     } catch (error: any) {
       alert(error.toString());
@@ -98,7 +117,7 @@ function Login() {
       Username: registerUsername,
       Email: email,
       Password: registerPassword,
-      CheckInFreq: checkInFreq
+      CheckInFreq: checkInFreq,
     };
     const js = JSON.stringify(obj);
 
@@ -106,16 +125,18 @@ function Login() {
       const response = await fetch(buildPath('api/register'), {
         method: 'POST',
         body: js,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const res = await response.json();
       if (res.error) {
         setRegisterMessage(res.error);
       } else {
-        setRegisterMessage('Registration successful! Please check your email for the verification code.');
+        setRegisterMessage(
+          'Registration successful! Please check your email for the verification code.'
+        );
         setShowVerification(true); // Show verification input
-        setRegisterUsername(registerUsername); // Set username for verification
+        setVerificationUsername(registerUsername); // Set username for verification
       }
     } catch (error: any) {
       alert(error.toString());
@@ -125,15 +146,15 @@ function Login() {
   async function handleVerifyCode(event: any) {
     event.preventDefault();
 
-    if (!registerUsername) {
-      setVerificationMessage('Username is missing. Please log in or register.');
+    if (!verificationUsername) {
+      setVerificationMessage('Please enter your username.');
       return;
     }
 
     const response = await fetch(buildPath('api/verify'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Username: registerUsername, code: verificationCode })
+      body: JSON.stringify({ Username: verificationUsername, code: verificationCode }),
     });
 
     const res = await response.json();
@@ -152,7 +173,7 @@ function Login() {
     setShowRegister(false);
   }
 
-  // Handle switching to verify page if user not verified
+  // Handle switching to verify page if user not verified or user clicks "Verify"
   function handleSwitchToVerify() {
     clearAllFields();
     setShowVerification(true);
@@ -160,77 +181,53 @@ function Login() {
     setVerificationSuccess(false);
     setVerificationMessage('');
     setVerificationCode('');
+    // Keep verificationUsername empty for manual entry
   }
 
   return (
-    <div 
+    <div
       id="loginDiv"
       style={{
-          backgroundImage: `url(${gravestoneImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          width: '100%',
-          backgroundColor: '#242424'
+        backgroundImage: `url(${gravestoneImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100%',
+        backgroundColor: '#242424',
       }}
     >
       {showVerification ? (
         // Verification Code Form
-        <div id="verifyDiv" className="login-container" style={{
-          padding: '20px',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '8px',
-          width: '300px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h3>Enter Verification Code</h3>
-          <form onSubmit={handleVerifyCode}>
-            <input
-              type="text"
-              placeholder="Verification Code"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-              className="login-input"
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginBottom: '15px',
-                border: '1px solid #ccc',
-                borderRadius: '5px'
-              }}
-            />
-            <button type="submit" className="login-button" style={{
-              width: '100%',
-              padding: '10px',
-              backgroundColor: '#333',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}>
-              Verify
-            </button>
-          </form>
-          <div className="login-message" style={{ color: verificationSuccess ? 'green' : 'red', textAlign: 'center' }}>
-            {verificationMessage || message}
+        <div className="login-container" style={{ padding: '0 10px' }}>
+          <h3>Enter Email Verification Code</h3>
+          <input
+            type="text"
+            placeholder="Username"
+            value={verificationUsername}
+            onChange={(e) => setVerificationUsername(e.target.value)}
+            className="login-input"
+          />
+          <input
+            type="text"
+            placeholder="Verification Code"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            className="login-input"
+          />
+          <button onClick={handleVerifyCode} className="login-button">
+            Verify
+          </button>
+
+          <div className={`login-message ${verificationSuccess ? 'success' : ''}`}>
+            {verificationMessage}
           </div>
 
           {verificationSuccess && (
-            <button onClick={handleReturnToLogin} className="login-button" style={{
-              width: '100%',
-              padding: '10px',
-              backgroundColor: '#333',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginTop: '10px'
-            }}>
+            <button onClick={handleReturnToLogin} className="login-button">
               Return to Login
             </button>
           )}
@@ -394,96 +391,50 @@ function Login() {
             Back to Login
           </button>
 
-          <div className="login-message" style={{ marginTop: '10px', color: 'red', textAlign: 'center' }}>
-            {registerMessage}
-          </div>
+          <div className="login-message">{registerMessage}</div>
         </div>
       ) : (
         // Login Form
-        <div className="login-container" style={{
-          padding: '20px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '8px',
-          width: '300px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
+        <div className="login-container" style={{ padding: '0 10px' }}>
           <h2 className="login-title">Login to Afterwords</h2>
 
-          <form onSubmit={doLogin}>
-            <input
-              type="text"
-              id="loginName"
-              placeholder="Username"
-              value={loginName}
-              onChange={(e) => setLoginName(e.target.value)}
-              className="login-input"
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginBottom: '10px',
-                border: '1px solid #ccc',
-                borderRadius: '5px'
-              }}
-            />
+          <input
+            type="text"
+            id="loginName"
+            placeholder="Username"
+            value={loginName}
+            onChange={(e) => setLoginName(e.target.value)}
+            className="login-input"
+          />
 
-            <input
-              type="password"
-              id="loginPassword"
-              placeholder="Password"
-              value={loginPassword}
-              onChange={(e) => setPassword(e.target.value)}
-              className="login-input"
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginBottom: '10px',
-                border: '1px solid #ccc',
-                borderRadius: '5px'
-              }}
-            />
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            value={loginPassword}
+            onChange={(e) => setPassword(e.target.value)}
+            className="login-input"
+          />
 
-            <button type="submit" className="login-button" style={{
-              width: '100%',
-              padding: '10px',
-              backgroundColor: '#333',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}>
-              Log In
-            </button>
-          </form>
+          <button onClick={doLogin} className="login-button">
+            Log In
+          </button>
 
-          <button onClick={() => { clearAllFields(); setShowRegister(true); }} className="register-button" style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#555',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}>
+          <button
+            onClick={() => {
+              clearAllFields();
+              setShowRegister(true);
+            }}
+            className="register-button"
+          >
             Register
           </button>
 
-          <button onClick={handleSwitchToVerify} className="login-button" style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#007BFF',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}>
+          <button onClick={handleSwitchToVerify} className="login-button">
             Verify
           </button>
 
-          <div className={`login-message ${message === 'Login successful!' ? 'success' : ''}`} style={{ marginTop: '10px', color: 'red', textAlign: 'center' }}>
+          <div className={`login-message ${message === 'Login successful!' ? 'success' : ''}`}>
             {message}
           </div>
         </div>

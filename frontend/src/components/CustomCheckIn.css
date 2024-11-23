@@ -1,0 +1,90 @@
+.custom-check-in-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    border: 2px solid #444;
+    border-radius: 12px;
+    background-color: #2d2d2d;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.5);
+    font-family: 'Arial', sans-serif;
+    color: #f1f1f1;
+}
+
+.custom-check-in-container h2 {
+    text-align: center;
+    color: #e0e0e0;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.custom-check-in-container p {
+    font-size: 1rem;
+    color: #ccc;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+.custom-check-in-container p strong {
+    color: #e0e0e0;
+}
+
+.custom-check-in-button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.custom-check-in-button:hover {
+    background-color: #45a049;
+}
+
+.custom-check-in-frequency {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #3a3a3a;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.custom-check-in-frequency label {
+    font-size: 1.2rem;
+    color: #e0e0e0;
+    display: block;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.custom-radio-option {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1rem;
+    color: #ccc;
+}
+
+.custom-radio-option input {
+    margin-right: 10px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.custom-message {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #333;
+    border-left: 5px solid #4CAF50;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-size: 1rem;
+}

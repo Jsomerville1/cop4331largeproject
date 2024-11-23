@@ -14,14 +14,12 @@ build/
 dist/
 client/.parcel-cache
 
-package.json
 vite.svg
 
 tsconfig.app.json
 tsconfig.node.json
-
+/frontend/package.json
 vite.config.ts
 package-lock.json
-package.json
 eslint.config.js
 
