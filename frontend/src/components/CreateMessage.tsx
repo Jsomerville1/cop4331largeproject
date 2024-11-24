@@ -38,7 +38,7 @@ interface Document {
 function CreateMessage() {
   function buildPath(route: string): string {
     return import.meta.env.MODE === 'development'
-      ? 'http://copteam22.xyz:5000/' + route
+      ? 'http://localhost:5000/' + route
       : '/' + route;
   }
 
