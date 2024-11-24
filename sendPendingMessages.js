@@ -70,7 +70,7 @@ async function sendPendingMessages(db) {
       // Handle Text Messages
       // ----------------------------
       // Find all unsent messages for this user
-      const messages = await db.collection('Messages').find({ userId: UserId, isSent: false, isPdf: false }).toArray();
+      const messages = await db.collection('Messages').find({ userId: UserId, isSent: false}).toArray();
       console.log(`[DEBUG] Found ${messages.length} unsent text messages for UserID: ${UserId}`); // Debug log
 
       for (const message of messages) {
@@ -101,7 +101,7 @@ async function sendPendingMessages(db) {
       // ----------------------------
       // Find all unsent documents for this user
       const documents = await db.collection('Documents').find({ userId: UserId, isSent: false }).toArray();
-      logger.info('Called documents email send part bla bla'); // Debug log
+      logger.info(`[DEBUG] Found ${documents.length} unsent documents for UserID: ${UserId}`); // Debug log
 
       console.log(`[DEBUG] Found ${documents.length} unsent documents for UserID: ${UserId}`); // Debug log
 
