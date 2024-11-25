@@ -508,13 +508,24 @@ function ViewMessages() {
                       onClick={(e) => e.stopPropagation()} // Prevent collapse when clicking textarea
                     />
                     <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent collapse when clicking Cancel
+                        setIsEditingItemId(null);
+                        setIsEditingItemType(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
                       variant="success"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent collapse when clicking Save
                         handleUpdateMessage(item.id);
                       }}
-                      className="custom-button"
+                      className="custom-button ml-2"
                     >
                       Save
                     </Button>
@@ -656,6 +667,17 @@ function ViewMessages() {
                                       />
                                     </Form.Group>
                                     <div className="recipient-actions mt-2">
+                                      
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent collapse when clicking Cancel
+                                          setIsEditingRecipientId(null);
+                                        }}
+                                      >
+                                        Cancel
+                                      </Button>
                                       <Button
                                         variant="success"
                                         size="sm"
@@ -667,20 +689,9 @@ function ViewMessages() {
                                             item.type
                                           );
                                         }}
-                                        className="custom-button"
+                                        className="custom-button ml-2"
                                       >
                                         Save
-                                      </Button>
-                                      <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation(); // Prevent collapse when clicking Cancel
-                                          setIsEditingRecipientId(null);
-                                        }}
-                                        className="ml-2"
-                                      >
-                                        Cancel
                                       </Button>
                                     </div>
                                   </>
@@ -746,7 +757,7 @@ function ViewMessages() {
         centered
         dialogClassName="custom-modal"
       >
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title style={{ color: '#F8F8FF' }}>Add Recipient</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ backgroundColor: '#2c2c2c' }}>
@@ -802,7 +813,7 @@ function ViewMessages() {
         centered
         dialogClassName="custom-modal"
       >
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title style={{ color: '#F8F8FF' }}>
             Confirm Delete {itemToDelete?.type === 'text' ? 'Message' : 'PDF'}
           </Modal.Title>
@@ -830,7 +841,7 @@ function ViewMessages() {
         centered
         dialogClassName="custom-modal"
       >
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title style={{ color: '#F8F8FF' }}>Confirm Delete Recipient</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ backgroundColor: '#2c2c2c' }}>
