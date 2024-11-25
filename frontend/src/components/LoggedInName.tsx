@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function LoggedInName() {
-  const [message, setMessage] = useState('');
+  const [message] = useState('');
   const navigate = useNavigate();
 
   // Retrieve user data from localStorage
   const user = JSON.parse(localStorage.getItem('user_data') || '{}');
 
-  function buildPath(route: string): string {
-    return import.meta.env.MODE === 'development'
+  /*function buildPath(route: string): string {
+    return import.meta.env.MODE === ''
       ? 'http://localhost:5000/' + route
       : '/' + route;
-  }
+  }*/
 
   return (
     <div className="logged-in-name-container">
