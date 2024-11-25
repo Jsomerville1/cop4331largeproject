@@ -1,5 +1,3 @@
-// CreateMessage.tsx
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Tabs, Tab, Modal, Form, Table } from 'react-bootstrap';
@@ -188,6 +186,11 @@ function CreateMessage() {
       return;
     }
 
+    if (currentMessageId === null) {
+      setErrorMessage('No message selected.');
+      return;
+    }
+
     const recipientData = {
       userId: Number(userId),
       recipientName: newRecipient.name.trim(),
@@ -214,7 +217,7 @@ function CreateMessage() {
               return {
                 ...msg,
                 recipients: [
-                  ...msg.recipients,
+                  ...(msg.recipients || []),
                   {
                     recipientId: res.recipientId,
                     userId: Number(userId),
@@ -454,6 +457,8 @@ function CreateMessage() {
         onHide={handleCloseRecipientModal}
         centered
         dialogClassName="custom-modal"
+        backdrop="static"
+        keyboard={false}
       >
         <Modal.Header closeButton>
           <Modal.Title style={{ color: '#F8F8FF' }}>Add Recipient</Modal.Title>
