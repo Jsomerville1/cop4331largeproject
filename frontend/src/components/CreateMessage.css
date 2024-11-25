@@ -1,4 +1,6 @@
 /* CreateMessage.css */
+
+/* Header Styles */
 h2, h3, h5 {
     text-align: center;
     margin-bottom: 20px;
@@ -9,6 +11,14 @@ p {
     color: #F8F8FF;
 }
 
+/* Container */
+.create-message-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Forms */
 form {
     display: flex;
     flex-direction: column;
@@ -25,6 +35,7 @@ form {
 
 form label {
     font-size: 1.2rem;
+    color: #F8F8FF;
 }
 
 textarea {
@@ -42,10 +53,11 @@ textarea {
 
 textarea:focus {
     outline: none;
-    border-color: #646cff;
+    border-color: #585fdd;
 }
 
-button {
+/* Button Styles */
+.btn {
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
@@ -54,54 +66,88 @@ button {
     transition: all 0.3s ease;
 }
 
+.btn-primary,
 button[type="submit"] {
-    background-color: #4caf50;
+    background-color: #6e71b3;
     color: white;
 }
 
+.btn-primary:hover,
 button[type="submit"]:hover {
-    background-color: #45a049;
+    background-color: #585fdd;
 }
 
-.d-flex {
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-button.variant-primary {
-    background-color: #646cff;
+.btn-secondary {
+    background-color: #6e71b3;
     color: white;
 }
 
-button.variant-primary:hover {
-    background-color: #535bf2;
+.btn-secondary:hover {
+    background-color: #8a8caf;
 }
 
-button.variant-danger {
+.btn-info {
+    background-color: #6e71b3;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #878bd1;
+}
+
+.btn-danger {
     background-color: #e74c3c;
     color: white;
 }
 
-button.variant-danger:hover {
+.btn-danger:hover {
     background-color: #c0392b;
 }
 
-table {
+/* Tables */
+.custom-table {
+    background-color: #2c2c2c;
+    color: #F8F8FF;
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
     border-collapse: collapse;
-    background-color: #2c2c2c;
-    color: rgb(141, 141, 141);
     border-radius: 10px;
     overflow: hidden;
 }
 
-table th, table td {
-    padding: 12px 15px;
-    text-align: center;
+.custom-table th {
+    color: #F8F8FF;
+    background-color: #414141;
+    padding: 10px;
+    border: 1px solid #202020;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+.custom-table td {
+    background-color: #4b4b4b;
+    color: #ffffff;
+    padding: 10px;
+    border: 1px solid #202020;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.custom-table input[type="text"],
+.custom-table input[type="email"] {
+    background-color: #4b4b4b;
+    color: #ffffff;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #414141;
+}
+
+.custom-table input[type="text"]::placeholder,
+.custom-table input[type="email"]::placeholder {
+    color: #ffffff;
+    opacity: 0.7;
+}
+
+/* Error and Success Messages */
 .error-message {
     color: #ff4d4d;
     font-weight: bold;
@@ -116,41 +162,156 @@ table th, table td {
     margin-top: 10px;
 }
 
-label {
+/* Message Cards */
+.message-card {
+    background-color: #2c2c2c;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    color: #F8F8FF;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.message-card:hover {
+    background-color: #3a3a3a;
+}
+
+.message-summary p {
+    margin: 0;
+    color: #F8F8FF;
+}
+
+.message-details {
+    margin-top: 15px;
+}
+
+.message-details h5 {
+    text-align: left;
+    margin-bottom: 10px;
+    color: #F8F8FF;
+}
+
+.message-details p {
+    color: #F8F8FF;
+}
+
+/* PDF Form Styling */
+.pdf-form {
+    margin-top: 20px;
+}
+
+.pdf-form label {
     color: white;
-  }
-
-.custom-table {
-    background-color: #414141;
 }
 
-.custom-table th {
-    color: white;
-    background-color: #414141;
-}
-
-.custom-table td {
-    background-color: #6e6e6e;
-}
-
-.custom-table th,
-.custom-table td {
-    padding: 10px;
-    border: 1px solid #202020;
-    padding: 8px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.custom-table input[type="text"],
-.custom-table input[type="email"] {
+.pdf-form input,
+.pdf-form textarea {
     background-color: #4b4b4b;
     color: #ffffff;
-    padding: 6px;
+    border: 1px solid #414141;
     border-radius: 8px;
+    padding: 10px;
+    width: 100%;
 }
 
-.custom-table input[type="text"]::placeholder,
-.custom-table input[type="email"]::placeholder {
+.pdf-form button {
+    background-color: #6e71b3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.pdf-form button:hover {
+    background-color: #585fdd;
+}
+
+.document-card {
+    background-color: #2c2c2c;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: #F8F8FF;
+}
+
+/* Modal Styling */
+.custom-modal .modal-content {
+    background-color: #2c2c2c !important;
+    color: #F8F8FF;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal .modal-header {
+    border-bottom: 1px solid #414141;
+}
+
+.custom-modal .modal-footer {
+    border-top: 1px solid #414141;
+}
+
+.custom-modal .btn-secondary {
+    background-color: #6e71b3;
+    border: none;
+}
+
+.custom-modal .btn-primary {
+    background-color: #585fdd;
+    border: none;
+}
+
+.custom-modal .btn-secondary:hover,
+.custom-modal .btn-primary:hover {
+    background-color: #8a8caf;
+}
+
+.custom-modal input {
+    background-color: #4b4b4b;
+    color: #ffffff;
+    border: 1px solid #414141;
+}
+
+.custom-modal input::placeholder {
     color: #ffffff;
     opacity: 0.7;
+}
+
+/* Tabs Styling */
+.custom-tabs .nav-tabs {
+    border-bottom: none;
+    justify-content: center;
+}
+
+.custom-tabs .nav-tabs .nav-item .nav-link {
+    background-color: #4b4b4b;
+    color: #ffffff;
+    border: none;
+    margin-right: 5px;
+    border-radius: 8px 8px 0 0;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+}
+
+.custom-tabs .nav-tabs .nav-item .nav-link:hover {
+    background-color: #5a5a5a;
+    color: #ffffff;
+}
+
+.custom-tabs .nav-tabs .nav-item .nav-link.active {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+.custom-tabs .nav-tabs .nav-item .nav-link:focus {
+    outline: none;
+}
+
+.custom-tabs .tab-content {
+    background-color: #2c2c2c;
+    padding: 20px;
+    border-radius: 0 8px 8px 8px;
+    color: #ffffff;
 }
