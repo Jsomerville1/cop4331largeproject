@@ -4,21 +4,19 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
   ],
+  
   "compilerOptions": {
-    "types": ["jest", "node", "@testing-library/jest-dom", "@testing-library/react"],
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "module": "esnext",
     "target": "es6",
-    "lib": ["DOM", "DOM.Iterable", "esnext"],
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
+    "module": "ES2022", // Must be 'es2020' or higher
+    "lib": ["dom", "es2020"],
+    "jsx": "react-jsx", // Use 'react-jsx' for the new JSX transform
     "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node10",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true
+    "types": ["jest", "node"]
   },
-  "include": ["src", "src/**/*.test.tsx", "global.d.ts", "setupTests.ts"]
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

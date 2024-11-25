@@ -32,13 +32,13 @@ interface Document {
   isSent: boolean;
   createdAt: string;
 }
-
+/*
 function CreateMessage() {
   function buildPath(route: string): string {
     return import.meta.env.MODE === 'development'
       ? 'http://localhost:5000/' + route
       : '/' + route;
-  }
+  }*/
 
   const [key, setKey] = useState<string>('text'); // For Tabs
   const [content, setContent] = useState('');

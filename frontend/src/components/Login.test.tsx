@@ -1,26 +1,14 @@
 // src/components/Login.test.tsx
-import React from 'react';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Login from './Login';
-
-// Mocking window.location.href
-const originalLocation = window.location;
-
-beforeAll(() => {
-  // @ts-ignore
-  delete window.location;
-  window.location = { href: '' } as any;
-});
-
-afterAll(() => {
-  window.location = originalLocation;
-});
+import fetchMock from 'jest-fetch-mock';
 
 describe('Login Component', () => {
   beforeEach(() => {
-    // Clear mocks before each test
-    jest.resetAllMocks();
+    fetchMock.resetMocks();
+    jest.clearAllMocks();
     localStorage.clear();
   });
 
@@ -37,9 +25,7 @@ describe('Login Component', () => {
     expect(screen.getByText('Verify')).toBeInTheDocument();
   });
 
-  
-
-  test('navigates to /cards on successful login for verified user', async () => {
+  test('navigates to /afterwords on successful login for verified user', async () => {
     // Mock the fetch API to simulate a successful login
     const mockUserData = {
       firstName: 'Joseph',
@@ -48,11 +34,7 @@ describe('Login Component', () => {
       Verified: true,
     };
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(mockUserData),
-      })
-    ) as jest.Mock;
+    fetchMock.mockResponseOnce(JSON.stringify(mockUserData));
 
     render(<Login />);
 
@@ -65,15 +47,16 @@ describe('Login Component', () => {
 
     // Wait for the redirection
     await waitFor(() => {
-      expect(window.location.href).toBe('/cards');
+      expect(window.location.href).toBe('/afterwords');
     });
 
     // Check that user data is stored in localStorage
     const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
     expect(storedUser).toEqual({
+      id: '12345',
       firstName: 'Joseph',
       lastName: 'Somerville',
-      id: '12345',
+      // Include other fields if necessary
     });
   });
 });
