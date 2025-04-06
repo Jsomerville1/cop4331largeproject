@@ -58,7 +58,7 @@ const cronStatus = {
 const { MongoClient, ObjectId } = require('mongodb');
 
 // MongoDB connection string with database name included
-const url = 'mongodb+srv://COP4331:COPT22POOSD@cluster0.stfv8.mongodb.net/COP4331?retryWrites=true&w=majority';
+const url = MONGODB_URL;
 const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 let db;
 
